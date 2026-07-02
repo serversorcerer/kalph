@@ -494,6 +494,17 @@ def render_status(cfg: Config) -> str:
     if stop.exists():
         lines.append("KILL SWITCH SET (.kelix/STOP) — runs will halt")
 
+    from .watch import find_active_runs
+
+    active = find_active_runs(cfg.kelix_dir / "runs")
+    if active:
+        lines.append("\nLive now (kelix watch to stream):")
+        for hb in active:
+            task = f" task={hb.task}" if hb.task else ""
+            lines.append(
+                f"  {hb.run_id}  role={hb.role or '-'}  iter {hb.iteration}{task}"
+            )
+
     claims = list_claims(cfg.kelix_dir)
     if claims:
         lines.append("\nTask claims:")

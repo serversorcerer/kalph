@@ -29,6 +29,7 @@ from .gitutil import (
 from .metrics import IterationLedgerRow
 from .prompt import assemble_prompt, load_template, relevance_query_for_task
 from .state import State, load_state, write_state
+from .watch import write_heartbeat
 
 RATIONALE_RE = re.compile(r"^RATIONALE:\s*(.+)$", re.MULTILINE)
 FROM_COMMIT_RATIONALE_PREFIX = "(from commit) "
@@ -467,8 +468,14 @@ class Runner:
                 context.get("relevance_query", ""),
             )
 
+            write_heartbeat(
+                run_dir, run_id, index, "running",
+                role=self.agent_id, task=current_task,
+            )
+            live_log = run_dir / f"iter-{index:03d}.live.log"
+
             try:
-                agent = adapter.run(prompt, workdir)
+                agent = adapter.run(prompt, workdir, live_log=live_log)
             except AdapterError as exc:
                 rec.failure = f"adapter error: {exc}"
                 rec.duration_s = round(time.monotonic() - started, 1)
@@ -602,6 +609,10 @@ class Runner:
     def _finish(self, result: RunResult, run_dir: Path, log):
         from .memory import write_retrospective
 
+        write_heartbeat(
+            run_dir, result.run_id, len(result.iterations), "finished",
+            role=self.agent_id,
+        )
         workdir = Path(result.workdir) if result.workdir else self.cfg.root
         self._maybe_apply_phase_gate(workdir, at_run_end=True)
         if self._run_state is not None:

@@ -251,6 +251,50 @@ def cmd_run(args) -> int:
     return 0 if result.status in ("completed", "max_iterations") else 1
 
 
+def cmd_watch(args) -> int:
+    from .art import say, strip
+    from .watch import find_active_runs, follow
+
+    cfg = load_config(Path(args.path))
+    runs_dir = cfg.kelix_dir / "runs"
+
+    run_id = args.run_id
+    if not run_id:
+        active = find_active_runs(runs_dir)
+        if not active:
+            print(
+                say(
+                    "no active run — start one with `kelix run`, "
+                    "then watch it work",
+                    "info",
+                )
+            )
+            return 1
+        if len(active) > 1:
+            print(say(f"{len(active)} active runs (watching newest):", "info"))
+            for hb in active:
+                print(f"    {hb.run_id}  role={hb.role or '-'}  iter {hb.iteration}")
+            print(say("pick one with --run-id", "info"))
+        run_id = active[0].run_id
+
+    if sys.stdout.isatty():
+        print(strip())
+    print(say(f"watching run {run_id} — ctrl-c detaches, the loop keeps going", "climb"))
+
+    def emit(text: str) -> None:
+        print(text, end="", flush=True)
+
+    try:
+        code = follow(runs_dir, run_id, emit)
+    except KeyboardInterrupt:
+        print()
+        print(say(f"detached — run {run_id} continues unattended", "ok"))
+        return 0
+    if code != 0:
+        print(say(f"no heartbeat for run {run_id} (too old, or never started)", "warn"))
+    return code
+
+
 def cmd_status(args) -> int:
     from .art import strip
     from .fleet import render_status
@@ -523,6 +567,11 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("status", help="show run/fleet status from coordination files")
     p.add_argument("--path", default=".")
     p.set_defaults(func=cmd_status)
+
+    p = sub.add_parser("watch", help="stream a running loop's agent output live")
+    p.add_argument("--path", default=".")
+    p.add_argument("--run-id", default="", help="watch a specific run (default: newest active)")
+    p.set_defaults(func=cmd_watch)
 
     p = sub.add_parser("stop", help="set the kill switch (.kelix/STOP)")
     p.add_argument("--path", default=".")

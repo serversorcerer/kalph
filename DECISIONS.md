@@ -190,3 +190,16 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   draft agent also tried to write this very entry into DECISIONS.md and the
   non_planning_change guard rejected the iteration — correct behavior; the
   owner writes the decision log, the planner writes the plan.
+- D23 (kelix watch — owner-directed, built outside the loop): live
+  observability for running agents. The adapter's reader thread now streams
+  chunks to `.kelix/runs/<id>/iter-NNN.live.log` (flushed per chunk); the
+  runner writes `heartbeat.json` (run id, iteration, task, pid, status) at
+  iteration start and run end; `kelix watch` tails the active run across
+  iteration hops, `--run-id` selects among fleet runs, ctrl-c detaches
+  without touching the run; `kelix status` lists live runs. All bookkeeping
+  stays gitignored/checkpoint-excluded. Side effect worth its own line: the
+  reader switched from blocking `read(4096)` to `read1(4096)`, which also
+  fixes a latent inactivity-watchdog unfairness (a slowly-chatty agent's
+  activity clock only ticked per full 4KB buffer). Built directly by the
+  owner-side assistant for immediate use on the next runs; recorded here
+  per the bootstrap-intervention rule.

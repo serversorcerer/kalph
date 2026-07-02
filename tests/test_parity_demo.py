@@ -114,6 +114,8 @@ isolation = "worktree"
 
     # Auditable trail: transcripts + retrospective + episodes exist.
     run_dir = cfg.kelix_dir / "runs" / result.run_id
-    assert len(list(run_dir.glob("iter-*.log"))) == 5
+    # iter-???.log = final transcripts only (iter-NNN.live.log are the
+    # kelix-watch streams).
+    assert len(list(run_dir.glob("iter-???.log"))) == 5
     retro = (run_dir / "retrospective.md").read_text()
     assert "completed" in retro and "5 verified" in retro

@@ -142,12 +142,22 @@ one-line `RATIONALE:` explaining the task it chose.
 ## 8. Monitor and stop
 
 ```bash
+kelix watch
+```
+
+Streams the running agent's output live — its rationale, actions, and test
+runs as they happen. Follows the loop across iterations; `ctrl-c` detaches
+without touching the run. `--run-id` picks a specific run when several are
+active (fleet mode).
+
+```bash
 kelix status
 ```
 
 Shows the current state assembled purely from coordination files and git:
-recent runs and their branches, any fleet task claims, mailbox notes, and
-whether the kill switch is set.
+active runs (with a hint to `kelix watch` them), recent runs and their
+branches, any fleet task claims, mailbox notes, and whether the kill switch
+is set.
 
 ```bash
 kelix stop

@@ -52,6 +52,9 @@ $EDITOR .kelix/kelix.toml   # set [verify] commands = ["pytest -q", "ruff check 
 
 # 5. Run overnight, leaving reviewable PRs by morning:
 kelix run --max-iterations 25 --pr
+
+# ...and if you want to see it think, from another terminal:
+kelix watch                 # live stream of the agent working; ctrl-c detaches
 ```
 
 Already have a backlog? Skip steps 1–3 and edit `.kelix/backlog.md` directly.
@@ -118,6 +121,7 @@ See [`integrations/kiro/README.md`](integrations/kiro/README.md) and
 ```bash
 cp examples/fleet.toml .kelix/fleet.toml   # define agents + roles
 kelix fleet --max-iterations 15            # builders, a verifier, a scribe
+kelix watch                                # stream an agent's output live
 kelix status                               # live view from coordination files
 kelix stop                                 # global kill switch
 ```

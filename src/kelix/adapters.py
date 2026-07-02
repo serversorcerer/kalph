@@ -59,6 +59,7 @@ def _run_process(
     inactivity_timeout: int = 0,
     stdin_text: str | None = None,
     env: dict | None = None,
+    live_log: Path | None = None,
 ) -> AgentResult:
     try:
         proc = subprocess.Popen(
@@ -81,16 +82,28 @@ def _run_process(
     last_activity = time.monotonic()
     activity_lock = threading.Lock()
 
+    live_fh = None
+    if live_log is not None:
+        live_log.parent.mkdir(parents=True, exist_ok=True)
+        live_fh = open(live_log, "ab")
+
     def reader() -> None:
         nonlocal last_activity
         assert proc.stdout is not None
         while True:
-            chunk = proc.stdout.read(4096)
+            # read1: return as soon as ANY bytes arrive (read(4096) would
+            # block for the full 4KB, stalling both the live log stream and
+            # the inactivity watchdog).
+            chunk = proc.stdout.read1(4096)
             if not chunk:
                 break
             with activity_lock:
                 output_chunks.append(chunk)
                 last_activity = time.monotonic()
+            if live_fh is not None:
+                # Flushed per chunk so `kelix watch` can tail in real time.
+                live_fh.write(chunk)
+                live_fh.flush()
 
     reader_thread = threading.Thread(target=reader, daemon=True)
     reader_thread.start()
@@ -120,6 +133,8 @@ def _run_process(
         time.sleep(0.05)
 
     reader_thread.join(timeout=5)
+    if live_fh is not None:
+        live_fh.close()
     out = b"".join(output_chunks).decode(errors="replace")
 
     if hard_timeout:
@@ -138,7 +153,9 @@ class KiroAdapter:
     def __init__(self, cfg: Config):
         self.cfg = cfg
 
-    def run(self, prompt: str, cwd: Path) -> AgentResult:
+    def run(
+        self, prompt: str, cwd: Path, live_log: Path | None = None
+    ) -> AgentResult:
         env = dict(os.environ)
         env.setdefault("KIRO_LOG_NO_COLOR", "1")
         argv = [
@@ -155,6 +172,7 @@ class KiroAdapter:
             self.cfg.agent.timeout_seconds,
             inactivity_timeout=self.cfg.agent.inactivity_timeout_seconds,
             env=env,
+            live_log=live_log,
         )
 
 
@@ -167,7 +185,9 @@ class CmdAdapter:
         if not cfg.agent.command:
             raise AdapterError("cmd adapter requires [agent].command")
 
-    def run(self, prompt: str, cwd: Path) -> AgentResult:
+    def run(
+        self, prompt: str, cwd: Path, live_log: Path | None = None
+    ) -> AgentResult:
         template = self.cfg.agent.command
         timeout = self.cfg.agent.timeout_seconds
         inactivity = self.cfg.agent.inactivity_timeout_seconds
@@ -182,12 +202,18 @@ class CmdAdapter:
                     part.replace("{prompt_file}", prompt_path)
                     for part in shlex.split(template)
                 ]
-                return _run_process(argv, cwd, timeout, inactivity_timeout=inactivity)
+                return _run_process(
+                    argv, cwd, timeout,
+                    inactivity_timeout=inactivity, live_log=live_log,
+                )
             finally:
                 Path(prompt_path).unlink(missing_ok=True)
         if "{prompt}" in template:
             argv = [part.replace("{prompt}", prompt) for part in shlex.split(template)]
-            return _run_process(argv, cwd, timeout, inactivity_timeout=inactivity)
+            return _run_process(
+                argv, cwd, timeout,
+                inactivity_timeout=inactivity, live_log=live_log,
+            )
         # No token: classic Ralph, prompt on stdin.
         return _run_process(
             shlex.split(template),
@@ -195,6 +221,7 @@ class CmdAdapter:
             timeout,
             inactivity_timeout=inactivity,
             stdin_text=prompt,
+            live_log=live_log,
         )
 
 
@@ -218,7 +245,9 @@ class MockAdapter:
         self._scripts = sorted(p for p in self.dir.iterdir() if os.access(p, os.X_OK))
         self._index = 0
 
-    def run(self, prompt: str, cwd: Path) -> AgentResult:
+    def run(
+        self, prompt: str, cwd: Path, live_log: Path | None = None
+    ) -> AgentResult:
         from . import COMPLETION_SENTINEL
 
         if self._index >= len(self._scripts):
@@ -231,6 +260,7 @@ class MockAdapter:
             self.cfg.agent.timeout_seconds,
             inactivity_timeout=self.cfg.agent.inactivity_timeout_seconds,
             stdin_text=prompt,
+            live_log=live_log,
         )
 
 
