@@ -298,7 +298,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 
 ### Phase T-METRICS — the outcome ledger
 
-- [ ] ST1: loop-metrics schema module | priority: 57 | status: ready | by: owner | phase: T-METRICS | req: REQ-TM2, REQ-TM4
+- [x] ST1: loop-metrics schema module | priority: 57 | status: done | by: owner | phase: T-METRICS | req: REQ-TM2, REQ-TM4
   details: add src/kelix/metrics.py with dataclasses LoopMetrics (schema_version,
   iterations[], fleet_summaries[], proposal_outcomes[]), IterationLedgerRow
   (run_id, iteration, task_id, verified, retry_count, duration_s, failure,
