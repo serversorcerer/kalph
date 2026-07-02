@@ -24,6 +24,10 @@ Durable facts about this repo for future iterations.
   for token shapes, CommandPolicy deny/allow/allow_only/deny_extra). No tmp_path
   needed — pure functions.
 - Decisions already made are in DECISIONS.md; do not re-litigate them.
+- GOTCHA: never run `pip install -e .` inside a run worktree — it repoints the
+  shared venv's editable install at the worktree, which breaks `kalph` on the
+  main checkout after the worktree is removed. The verify commands already set
+  PYTHONPATH=src; that is sufficient. (Learned from run 20260702-002215.)
 - Prioritization rubric for backlog authoring and selection lives in
   `docs/prioritization.md` (owner-first, priority bands, decomposition/blocked rules).
 
