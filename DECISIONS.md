@@ -146,3 +146,14 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   backfilling `| phase: | req:` fields, with multi-REQ tasks now supported
   via comma-separated `req:` in lint coverage. The gate catching its own
   planner's slop is the system working as designed.
+- D20 (Milestone V — the value cut): planned via `kelix plan` interview
+  (7 questions, validated clean on the first draft — the REQ-collision fix
+  from D19 held). Owner decisions: finish ALL open work first (v0.2 →
+  v0.3 → v0.4 → V; quality over quantity); the value ledger judges every
+  module row-by-row from receipts with owner veto (D16 freeze is input,
+  not override); sync/ and pr.py are predetermined SCRAP (mocked-transport
+  and stubbed-gh receipts only); fleet is predetermined SHARPEN (zero
+  claim collisions is a real receipt); happy path narrows to init/plan/run
+  with lint/status/stop as secondary ops; value demo runs cold on a fresh
+  minimal sample repo. Milestone V (KV1–KV18) gates the release: the demo
+  transcript in docs/proof/value-demo.md is the ship criterion.
