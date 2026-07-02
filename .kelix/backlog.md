@@ -846,7 +846,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   to a SHARPEN or KEEP row in docs/value-ledger.md. Acceptance: index.md has
   ≤ 5 primary intent links above the fold; no link targets a SCRAP-only page.
 
-- [ ] KV14: quickstart init-plan-run path | priority: 42 | status: ready | by: owner | deps: KV11, KV12 | phase: V-SIMPLE | req: REQ-VM4
+- [x] KV14: quickstart init-plan-run path | priority: 42 | status: done | by: owner | deps: KV11, KV12 | phase: V-SIMPLE | req: REQ-VM4
   details: rewrite docs/quickstart.md so numbered steps are exactly: kelix init
   → write/point goal → kelix plan → promote tasks → kelix run → read verified
   commits on run branch. Document step count in the doc header (e.g. "6 steps
