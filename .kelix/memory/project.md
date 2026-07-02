@@ -160,6 +160,12 @@ Durable facts about this repo for future iterations.
   = tasks whose deps are done or in earlier waves; cyclic/blocked remainder
   lands in a final wave with `has_cycle=True`. Tests in `tests/test_backlog.py`
   (chain, diamond, cycle).
+- Fleet wave gating (`fleet.make_claim_hook`, `render_status`): before
+  `select_next`, claim candidates are restricted to task ids in the earliest
+  wave containing any non-done task (`_wave_allowed_task_ids`). Agents cannot
+  claim wave N+1 work while wave N is unfinished (even if wave N is claimed but
+  not done). `render_status` prints a "Pending tasks (waves):" section with
+  each non-done task's wave index. Tests in `tests/test_fleet.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

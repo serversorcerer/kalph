@@ -41,6 +41,13 @@ FLEET_BACKLOG = """\
 - [ ] FT4: task four | priority: 60 | status: ready | by: owner
 """
 
+WAVE_BACKLOG = """\
+# Backlog
+
+- [ ] W0: wave zero task | priority: 90 | status: ready | by: owner
+- [ ] W1: wave one task | priority: 99 | status: ready | by: owner | deps: W0
+"""
+
 # Fleet mock agents: mark the assigned task (parsed from the prompt on stdin)
 # done in the backlog and commit. This exercises the real claim/done flow.
 FLEET_SCRIPT = r"""
@@ -143,6 +150,38 @@ def test_claim_hook_returns_none_when_all_claimed(tmp_path):
         assert make_claim_hook(cfg, spec, f"hog-{i}")(repo, 1) is not None
     starved = make_claim_hook(cfg, spec, "starved")
     assert starved(repo, 1) is None
+
+
+def test_claim_hook_respects_earliest_incomplete_wave(tmp_path):
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".kelix" / "backlog.md").write_text(WAVE_BACKLOG)
+    (repo / ".kelix" / "fleet.toml").write_text(FLEET_TOML)
+    (repo / "kelix.toml").write_text("[agent]\nadapter = \"mock\"\n")
+    cfg = load_config(repo)
+    spec = load_fleet_spec(cfg, ".kelix/fleet.toml")
+
+    hook_a = make_claim_hook(cfg, spec, "agent-a")
+    hook_b = make_claim_hook(cfg, spec, "agent-b")
+
+    first = hook_a(repo, 1)
+    assert first is not None
+    assert "W0" in first
+    assert "W1" not in first
+
+    # W0 is claimed but not done — wave 1 must stay blocked for other agents.
+    second = hook_b(repo, 1)
+    assert second is None or "W1" not in second
+
+
+def test_render_status_shows_pending_task_waves(tmp_path):
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".kelix" / "backlog.md").write_text(WAVE_BACKLOG)
+    (repo / "kelix.toml").write_text("[agent]\nadapter = \"mock\"\n")
+    cfg = load_config(repo)
+    out = render_status(cfg)
+    assert "Pending tasks (waves):" in out
+    assert "wave 0: W0 (ready)" in out
+    assert "wave 1: W1 (ready)" in out
 
 
 def test_fleet_run_end_to_end_zero_collisions(tmp_path):

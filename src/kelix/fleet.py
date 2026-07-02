@@ -15,7 +15,7 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .backlog import Task, parse_backlog, select_next
+from .backlog import Task, parse_backlog, select_next, waves
 from .claims import claim_task, list_claims, mark_claim_done
 from .config import Config
 from .gitutil import git
@@ -107,6 +107,24 @@ def load_fleet_spec(cfg: Config, config_file: str) -> FleetSpec:
     return spec
 
 
+def _earliest_incomplete_wave(tasks: list[Task]) -> int | None:
+    """Index of the first wave containing a non-done task, or None if all done."""
+    wave_list, _ = waves(tasks)
+    for index, wave in enumerate(wave_list):
+        if any(task.status != "done" for task in wave):
+            return index
+    return None
+
+
+def _wave_allowed_task_ids(tasks: list[Task]) -> set[str]:
+    """Task ids eligible for fleet claims: only the earliest incomplete wave."""
+    wave_list, _ = waves(tasks)
+    earliest = _earliest_incomplete_wave(tasks)
+    if earliest is None:
+        return set()
+    return {task.id for task in wave_list[earliest]}
+
+
 def make_claim_hook(cfg: Config, spec: FleetSpec, agent_id: str):
     """pre_iteration hook: claim the next eligible task for this agent.
 
@@ -134,9 +152,12 @@ def make_claim_hook(cfg: Config, spec: FleetSpec, agent_id: str):
             if t.status == "done":
                 mark_claim_done(cfg.kelix_dir, t.id, agent_id)
 
+        allowed = _wave_allowed_task_ids(tasks)
         attempted: set[str] = set()
         while True:
-            candidates = [t for t in tasks if t.id not in attempted]
+            candidates = [
+                t for t in tasks if t.id not in attempted and t.id in allowed
+            ]
             task = select_next(candidates, autonomy=cfg.autonomy.level)
             if task is None:
                 return None
@@ -246,6 +267,33 @@ def _covering_task_id(tasks_for_req: list[Task]) -> str:
     return "-"
 
 
+def _pending_task_wave_lines(cfg: Config) -> list[str]:
+    backlog_path = cfg.root / cfg.loop.plan_file
+    if not backlog_path.is_file():
+        return []
+
+    tasks = parse_backlog(backlog_path.read_text(encoding="utf-8"))
+    pending = [task for task in tasks if task.status != "done"]
+    if not pending:
+        return []
+
+    wave_list, has_cycle = waves(tasks)
+    wave_by_id = {
+        task.id: index for index, wave in enumerate(wave_list) for task in wave
+    }
+
+    lines = ["", "Pending tasks (waves):"]
+    for task in sorted(
+        pending,
+        key=lambda item: (wave_by_id.get(item.id, 999), -item.priority, item.id),
+    ):
+        wave_num = wave_by_id.get(task.id, "?")
+        lines.append(f"  wave {wave_num}: {task.id} ({task.status})")
+    if has_cycle:
+        lines.append("  warning: dependency cycle detected")
+    return lines
+
+
 def _phase_gate_status_lines(cfg: Config) -> list[str]:
     roadmap = load_roadmap(cfg.kelix_dir)
     if roadmap is None:
@@ -295,6 +343,7 @@ def render_status(cfg: Config) -> str:
     """Live view assembled purely from coordination files + git."""
     lines = ["kelix status", "============"]
     lines.extend(_phase_gate_status_lines(cfg))
+    lines.extend(_pending_task_wave_lines(cfg))
     stop = cfg.kelix_dir / "STOP"
     if stop.exists():
         lines.append("KILL SWITCH SET (.kelix/STOP) — runs will halt")

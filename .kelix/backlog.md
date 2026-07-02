@@ -181,7 +181,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   warning flag returned alongside. Pure function. tests/test_backlog.py:
   chain, diamond, cycle.
 
-- [ ] PC11: fleet claims respect the earliest incomplete wave | priority: 70 | status: ready | by: owner | deps: PC10 | phase: P-WAVES | req: REQ-W2, REQ-W3
+- [x] PC11: fleet claims respect the earliest incomplete wave | priority: 70 | status: done | by: owner | deps: PC10 | phase: P-WAVES | req: REQ-W2, REQ-W3
   rationale: [P-WAVES/REQ-W2+W3] a fleet should finish wave N before starting wave N+1, like GSD execution waves
   details: in make_claim_hook (src/kelix/fleet.py), restrict candidate
   tasks to the earliest wave containing any non-done task before applying
