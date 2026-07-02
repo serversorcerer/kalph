@@ -17,6 +17,7 @@ Everything is a human-readable file (mission requirement). Layout:
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -98,6 +99,41 @@ def episode_digest(
         budget = budget_chars if budget_chars is not None else _default_budget(lines)
         return "\n".join(select(lines, query, budget))
     return "\n".join(lines)
+
+
+_SECTION_SPLIT = re.compile(r"(?=^## )", re.MULTILINE)
+
+
+def _project_sections(text: str) -> list[str]:
+    parts = [part.strip() for part in _SECTION_SPLIT.split(text) if part.strip()]
+    return parts or [text.strip()]
+
+
+def project_memory_digest(
+    cfg: Config,
+    workdir: Path | None = None,
+    query: str = "",
+    budget_chars: int | None = None,
+) -> str:
+    """Budgeted project-memory excerpt for prompt injection."""
+    if not cfg.memory.enabled:
+        return ""
+    base = workdir or cfg.root
+    path = base / ".kelix" / PROJECT_MEMORY_FILE
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8").strip()
+    if not text:
+        return ""
+    sections = _project_sections(text)
+    budget = budget_chars if budget_chars is not None else _default_budget(sections)
+    if query.strip():
+        from .context import select
+
+        return "\n\n".join(select(sections, query, budget))
+    if len(text) <= budget:
+        return text
+    return text[-budget:]
 
 
 # --- skills -------------------------------------------------------------------

@@ -3,8 +3,8 @@
 - milestone: v0.2 — Planning Core
 - phase: P-GATE
 - current_task: selecting
-- last_task: PC20
-- last_verified_commit: 4ff2bd9
-- done: 21
+- last_task: PC21
+- last_verified_commit: pending
+- done: 22
 - total: 81
 - blockers:

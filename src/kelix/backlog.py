@@ -113,6 +113,14 @@ def serialize_backlog(tasks: list[Task]) -> str:
     return "\n".join(lines) + ("\n" if lines else "")
 
 
+def find_task(tasks: list[Task], task_id: str) -> Task | None:
+    """Return the task with *task_id*, or None when absent."""
+    for task in tasks:
+        if task.id == task_id:
+            return task
+    return None
+
+
 def select_next(
     tasks: list[Task],
     autonomy: str = "normal",

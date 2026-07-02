@@ -202,7 +202,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   behavior without a query is unchanged. tests/test_context.py: relevant-
   but-old beats recent-but-noise; empty query falls back to recency.
 
-- [ ] PC21: 50% context budget split + compiler in the prompt | priority: 79 | status: ready | by: owner | deps: PC20, PC3 | phase: P-CONTEXT | req: REQ-C1
+- [x] PC21: 50% context budget split + compiler in the prompt | priority: 79 | status: done | by: owner | deps: PC20, PC3 | phase: P-CONTEXT | req: REQ-C1
   rationale: [P-CONTEXT/REQ-C1] context share is a policy, not an accident; default half the prompt
   details: add [memory] context_share (float, default 0.5) to config.py.
   prompt.assemble_prompt computes the char budget for the data slots

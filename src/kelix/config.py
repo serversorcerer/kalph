@@ -46,10 +46,13 @@ class VerifyConfig:
 @dataclass
 class MemoryConfig:
     enabled: bool = True
+    context_share: float = 0.5
     state_max_chars: int = 1200
     phase_context_max_chars: int = 2000
     digest_max_chars: int = 8000
+    project_max_chars: int = 4000
     skills_max_chars: int = 6000
+    mailbox_max_chars: int = 2000
     episodes_in_digest: int = 10
 
 
@@ -157,4 +160,7 @@ def load_config(root: Path | None = None) -> Config:
         raise ConfigError(f"unknown git isolation {cfg.git.isolation!r}")
     if cfg.autonomy.level not in ("normal", "high"):
         raise ConfigError(f"unknown autonomy level {cfg.autonomy.level!r}")
+    share = cfg.memory.context_share
+    if not isinstance(share, float) or not (0.0 <= share <= 1.0):
+        raise ConfigError("[memory].context_share must be a float between 0 and 1")
     return cfg

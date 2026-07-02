@@ -25,7 +25,7 @@ from .gitutil import (
     head_sha,
     is_repo,
 )
-from .prompt import assemble_prompt, load_template
+from .prompt import assemble_prompt, load_template, relevance_query_for_task
 from .state import State, load_state, write_state
 
 RATIONALE_RE = re.compile(r"^RATIONALE:\s*(.+)$", re.MULTILINE)
@@ -229,8 +229,7 @@ class Runner:
         if rec.verified is True:
             self._run_state.last_verified_commit = head_sha(workdir)
 
-    def _gather_context(self, workdir: Path) -> dict:
-        from .memory import episode_digest, skills_digest
+    def _gather_context(self, workdir: Path, current_task: str = "") -> dict:
         from .prompt import load_phase_context
         from .state import STATE_FILE, load_state
 
@@ -253,10 +252,12 @@ class Runner:
         return {
             "state": state,
             "phase_context": phase_context,
-            "memory_digest": episode_digest(self.cfg),
-            "skills": skills_digest(self.cfg, workdir),
             "mailbox": mailbox,
             "role": self.role,
+            "relevance_query": relevance_query_for_task(
+                self.cfg, workdir, current_task
+            ),
+            "workdir": workdir,
         }
 
     # -- the loop ------------------------------------------------------------
@@ -318,7 +319,7 @@ class Runner:
             checkpoint(workdir, f"kelix: pre-iteration {index} checkpoint")
             sha_before = head_sha(workdir)
 
-            context = self._gather_context(workdir)
+            context = self._gather_context(workdir, current_task)
             if role_extra:
                 context["role"] = (context["role"] or "") + "\n" + role_extra
             prompt = assemble_prompt(template, cfg, **context)

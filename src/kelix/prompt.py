@@ -16,6 +16,7 @@ from .state import load_state
 SLOT_STATE = "{{STATE}}"
 SLOT_PHASE_CONTEXT = "{{PHASE_CONTEXT}}"
 SLOT_MEMORY = "{{MEMORY_DIGEST}}"
+SLOT_PROJECT = "{{PROJECT_MEMORY}}"
 SLOT_SKILLS = "{{SKILLS}}"
 SLOT_MAILBOX = "{{MAILBOX}}"
 SLOT_ROLE = "{{ROLE}}"
@@ -96,7 +97,9 @@ touch the main branch directly.
 </episodes>
 
 ### Project memory
-(see `.kelix/memory/project.md` for the full file)
+<project_memory>
+{{PROJECT_MEMORY}}
+</project_memory>
 
 ### Relevant skills you previously earned
 <skills>
@@ -196,9 +199,26 @@ _EMPTY = {
     SLOT_STATE: "(no state file — flat-backlog mode)",
     SLOT_PHASE_CONTEXT: "(no phase decisions)",
     SLOT_MEMORY: "(no episodes yet)",
+    SLOT_PROJECT: "(no project memory yet)",
     SLOT_SKILLS: "(no skills yet)",
     SLOT_MAILBOX: "(empty)",
     SLOT_ROLE: DEFAULT_ROLE,
+}
+
+_SLOT_CAPS = (
+    "state",
+    "phase_context",
+    "episodes",
+    "project_memory",
+    "skills",
+    "mailbox",
+)
+_PRIORITY_SLOTS = ("state", "phase_context")
+_SECONDARY_WEIGHTS = {
+    "episodes": 4,
+    "project_memory": 3,
+    "skills": 3,
+    "mailbox": 1,
 }
 
 
@@ -206,6 +226,80 @@ def _truncate(text: str, budget: int, label: str) -> str:
     if len(text) <= budget:
         return text
     return text[:budget] + f"\n[... truncated to {budget} chars ({label} budget)]"
+
+
+def _slot_caps(cfg: Config) -> dict[str, int]:
+    mem = cfg.memory
+    return {
+        "state": mem.state_max_chars,
+        "phase_context": mem.phase_context_max_chars,
+        "episodes": mem.digest_max_chars,
+        "project_memory": mem.project_max_chars,
+        "skills": mem.skills_max_chars,
+        "mailbox": mem.mailbox_max_chars,
+    }
+
+
+def compute_slot_budgets(cfg: Config) -> dict[str, int]:
+    """Allocate the context-share pool across data slots (state/phase first)."""
+    caps = _slot_caps(cfg)
+    total = sum(caps.values())
+    pool = max(0, int(cfg.memory.context_share * total))
+    allocated = {slot: 0 for slot in _SLOT_CAPS}
+    remaining = pool
+
+    for slot in _PRIORITY_SLOTS:
+        take = min(caps[slot], remaining)
+        allocated[slot] = take
+        remaining -= take
+
+    if remaining > 0:
+        weight_sum = sum(_SECONDARY_WEIGHTS.values())
+        for slot, weight in _SECONDARY_WEIGHTS.items():
+            share = int(remaining * weight / weight_sum)
+            allocated[slot] = min(caps[slot], share)
+
+    if pool > 0 and allocated["state"] == 0:
+        allocated["state"] = min(caps["state"], max(1, pool // 10))
+
+    return allocated
+
+
+def relevance_query_for_task(
+    cfg: Config,
+    workdir: Path,
+    current_task: str = "",
+) -> str:
+    """Build the lexical query from the active or next selectable task."""
+    from .backlog import find_task, parse_backlog, select_next
+    from .state import load_state
+
+    backlog_path = workdir / cfg.loop.plan_file
+    if not backlog_path.is_file():
+        return ""
+
+    tasks = parse_backlog(backlog_path.read_text(encoding="utf-8"))
+    active_phase = ""
+    run_state = load_state(workdir / ".kelix")
+    if run_state is not None:
+        active_phase = run_state.phase
+
+    task = None
+    if current_task and current_task != "selecting":
+        task = find_task(tasks, current_task)
+    if task is None:
+        task = select_next(
+            tasks,
+            autonomy=cfg.autonomy.level,
+            active_phase=active_phase,
+        )
+    if task is None:
+        return ""
+
+    parts = [task.title]
+    if "details" in task.notes:
+        parts.append(task.notes["details"])
+    return " ".join(parts)
 
 
 def load_phase_context(kelix_dir: Path, phase_id: str) -> str:
@@ -283,29 +377,70 @@ def assemble_prompt(
     cfg: Config,
     state: str = "",
     phase_context: str = "",
-    memory_digest: str = "",
-    skills: str = "",
+    memory_digest: str | None = None,
+    project_memory: str | None = None,
+    skills: str | None = None,
     mailbox: str = "",
     role: str = "",
+    relevance_query: str = "",
+    workdir: Path | None = None,
 ) -> str:
+    budgets = compute_slot_budgets(cfg)
+
+    if memory_digest is None:
+        from .memory import episode_digest
+
+        memory_digest = episode_digest(
+            cfg,
+            query=relevance_query,
+            budget_chars=budgets["episodes"],
+        )
+    else:
+        memory_digest = _truncate(memory_digest, budgets["episodes"], "digest")
+
+    if project_memory is None:
+        from .memory import project_memory_digest
+
+        project_memory = project_memory_digest(
+            cfg,
+            workdir or cfg.root,
+            query=relevance_query,
+            budget_chars=budgets["project_memory"],
+        )
+    else:
+        project_memory = _truncate(
+            project_memory, budgets["project_memory"], "project_memory"
+        )
+
+    if skills is None:
+        from .memory import skills_digest
+
+        skills = skills_digest(
+            cfg,
+            workdir or cfg.root,
+            query=relevance_query,
+            budget_chars=budgets["skills"],
+        )
+    else:
+        skills = _truncate(skills, budgets["skills"], "skills")
+
     values = {
-        SLOT_STATE: _truncate(state, cfg.memory.state_max_chars, "state")
+        SLOT_STATE: _truncate(state, budgets["state"], "state")
         if state
         else _EMPTY[SLOT_STATE],
         SLOT_PHASE_CONTEXT: _truncate(
             format_phase_context(phase_context),
-            cfg.memory.phase_context_max_chars,
+            budgets["phase_context"],
             "phase_context",
         )
         if phase_context
         else _EMPTY[SLOT_PHASE_CONTEXT],
-        SLOT_MEMORY: _truncate(memory_digest, cfg.memory.digest_max_chars, "digest")
-        if memory_digest
-        else _EMPTY[SLOT_MEMORY],
-        SLOT_SKILLS: _truncate(skills, cfg.memory.skills_max_chars, "skills")
-        if skills
-        else _EMPTY[SLOT_SKILLS],
-        SLOT_MAILBOX: mailbox or _EMPTY[SLOT_MAILBOX],
+        SLOT_MEMORY: memory_digest or _EMPTY[SLOT_MEMORY],
+        SLOT_PROJECT: project_memory or _EMPTY[SLOT_PROJECT],
+        SLOT_SKILLS: skills or _EMPTY[SLOT_SKILLS],
+        SLOT_MAILBOX: _truncate(mailbox, budgets["mailbox"], "mailbox")
+        if mailbox
+        else _EMPTY[SLOT_MAILBOX],
         SLOT_ROLE: role or _EMPTY[SLOT_ROLE],
     }
     out = template

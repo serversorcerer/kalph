@@ -3,9 +3,11 @@ from kelix.prompt import (
     DEFAULT_TEMPLATE,
     PHASE_CONTEXT_BANNER,
     assemble_prompt,
+    compute_slot_budgets,
     format_phase_context,
     load_phase_context,
     load_template,
+    relevance_query_for_task,
 )
 
 
@@ -28,6 +30,7 @@ def test_slots_filled_with_placeholders_when_empty(tmp_path):
     assert "{{" not in out
     assert "(no state file — flat-backlog mode)" in out
     assert "(no episodes yet)" in out
+    assert "(no project memory yet)" in out
     assert "(no skills yet)" in out
     assert "solo builder" in out
 
@@ -173,3 +176,100 @@ def test_init_does_not_overwrite_existing_goal_md(tmp_path):
     goal.write_text("custom goal\n", encoding="utf-8")
     cmd_init(Args())
     assert goal.read_text(encoding="utf-8") == "custom goal\n"
+
+
+def test_context_share_controls_total_data_budget(tmp_path):
+    (tmp_path / "kelix.toml").write_text(
+        """
+[memory]
+context_share = 0.5
+state_max_chars = 100
+phase_context_max_chars = 100
+digest_max_chars = 1000
+project_max_chars = 1000
+skills_max_chars = 1000
+mailbox_max_chars = 1000
+"""
+    )
+    cfg = load_config(tmp_path)
+    caps_total = 100 + 100 + 1000 + 1000 + 1000 + 1000
+    budgets = compute_slot_budgets(cfg)
+    assert sum(budgets.values()) <= int(0.5 * caps_total) + 6
+
+
+def test_state_slot_not_starved_at_low_context_share(tmp_path):
+    (tmp_path / "kelix.toml").write_text(
+        """
+[memory]
+context_share = 0.05
+state_max_chars = 400
+phase_context_max_chars = 400
+digest_max_chars = 4000
+project_max_chars = 4000
+skills_max_chars = 4000
+mailbox_max_chars = 4000
+"""
+    )
+    cfg = load_config(tmp_path)
+    state_text = "milestone: v0.2\nphase: P-CONTEXT\n"
+    out = assemble_prompt(DEFAULT_TEMPLATE, cfg, state=state_text)
+    assert state_text.strip() in out
+    assert "truncated" not in out.split("<state>")[1].split("</state>")[0]
+
+
+def test_relevance_query_from_select_next_ready_task(tmp_path):
+    cfg = load_config(tmp_path)
+    backlog = tmp_path / cfg.loop.plan_file
+    backlog.parent.mkdir(parents=True, exist_ok=True)
+    backlog.write_text(
+        "- [ ] PC21: context budget split | priority: 79 | status: ready | by: owner\n"
+        "  details: allocate context_share across prompt slots\n"
+    )
+    query = relevance_query_for_task(cfg, tmp_path)
+    assert "context budget split" in query
+    assert "context_share" in query
+
+
+def test_assemble_prompt_passes_query_to_episode_selector(tmp_path):
+    import json
+
+    (tmp_path / "kelix.toml").write_text(
+        """
+[memory]
+context_share = 1.0
+state_max_chars = 1
+phase_context_max_chars = 1
+digest_max_chars = 80
+project_max_chars = 69
+skills_max_chars = 69
+mailbox_max_chars = 1
+"""
+    )
+    cfg = load_config(tmp_path)
+    ep_dir = tmp_path / ".kelix" / "memory"
+    ep_dir.mkdir(parents=True)
+    episodes = [
+        {
+            "ts": "2026-01-01T00:00:00",
+            "rationale": "PC10 — backlog parser wave computation",
+            "verified": True,
+            "failure": "",
+        },
+        {
+            "ts": "2026-07-02T00:00:00",
+            "rationale": "KE1 — readme unrelated marketing copy",
+            "verified": True,
+            "failure": "",
+        },
+    ]
+    (ep_dir / "episodes.jsonl").write_text(
+        "\n".join(json.dumps(ep) for ep in episodes) + "\n"
+    )
+    out = assemble_prompt(
+        DEFAULT_TEMPLATE,
+        cfg,
+        relevance_query="backlog parser waves",
+        workdir=tmp_path,
+    )
+    assert "backlog parser wave computation" in out
+    assert "readme unrelated marketing" not in out

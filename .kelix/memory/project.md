@@ -129,6 +129,14 @@ Durable facts about this repo for future iterations.
   and `memory.skills_digest` accept optional `query` and `budget_chars`; when
   query is set they call `select()`, otherwise behavior is unchanged. Tests in
   `tests/test_context.py`.
+- Context budget compiler (`prompt.compute_slot_budgets`, `assemble_prompt`):
+  `[memory].context_share` (default 0.5) times the sum of per-slot caps drives
+  the data-slot pool; state and phase_context allocate first, then episodes,
+  project_memory, skills, and mailbox by fixed weights. `relevance_query_for_task`
+  builds the query from the claimed/next ready task (title + details); loop
+  `_gather_context` passes it so episode/skills/project digests use `select()`.
+  Project memory is injected via `{{PROJECT_MEMORY}}` (`memory.project_memory_digest`).
+  Tests in `tests/test_prompt.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to
