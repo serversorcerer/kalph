@@ -14,7 +14,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
 - [x] KB3: security module tests | priority: 75 | status: done | by: owner
 - [x] KB4: prioritization rubric doc | priority: 70 | status: done | by: owner
 
-- [ ] KB5: autonomy-aware task selection | priority: 88 | status: ready | by: owner | deps: KB1
+- [x] KB5: autonomy-aware task selection | priority: 88 | status: done | by: owner | deps: KB1
   rationale: proposed tasks must be selectable under autonomy high, and never outrank owner tasks otherwise
   details: extend src/kalph/backlog.py select_next(tasks, autonomy="normal") so that
   tasks with status "proposed" are treated as candidates only when autonomy="high"
@@ -23,7 +23,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   tasks are never selected. Update tests/test_backlog.py with cases for both levels.
   Keep backward compatibility: select_next(tasks) with one argument must still work.
 
-- [ ] KB6: PR flow module | priority: 85 | status: ready | by: owner | deps: KB1
+- [x] KB6: PR flow module | priority: 85 | status: done | by: owner | deps: KB1
   rationale: overnight mode must end in reviewable PRs, never direct pushes to main
   details: create src/kalph/pr.py with open_pr(cfg, result, run_dir) -> str|None that
   (1) refuses (returns None, logs via the returned message being None) if result.branch
@@ -41,7 +41,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   branch, assert push before gh, assert no --force anywhere, assert body contains
   verification evidence, assert None (not exception) when gh fails.
 
-- [ ] KB7: fleet claim files | priority: 82 | status: ready | by: owner | deps: KB1
+- [x] KB7: fleet claim files | priority: 82 | status: done | by: owner | deps: KB1
   rationale: two fleet agents must never work the same task; claims are the mechanism
   details: create src/kalph/claims.py managing .kalph/fleet/claims/<task-id>.json.
   Functions: claim_task(kalph_dir, task_id, agent_id, branch) -> bool using
