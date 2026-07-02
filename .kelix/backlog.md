@@ -469,7 +469,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   `## Findings` and a citation of the ST19a run id; record the diagnosis path
   in DECISIONS.md pending section. Acceptance: `pytest -q` pass.
 
-- [ ] ST19c: self-tuning proof — propose tuning PR | priority: 42 | status: ready | by: owner | deps: ST19b | phase: T-PROPOSE | req: REQ-TP2
+- [x] ST19c: self-tuning proof — propose tuning PR | priority: 42 | status: done | by: owner | deps: ST19b | phase: T-PROPOSE | req: REQ-TP2
   rationale: [ST19] ship gate step 3 — policy edit on allowlisted paths only
   details: run `kelix propose --no-pr --diagnosis-file <ST19b path>`; assert
   `validate_propose_diff` passes (no backlog/STATE edits), a

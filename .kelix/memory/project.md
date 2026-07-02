@@ -280,6 +280,11 @@ Durable facts about this repo for future iterations.
   `[git] isolation=none` in `.kelix/kelix.toml`, run the subcommand, restore.
   Diagnosis output under `.kelix/memory/diagnosis-*.md` is also gitignored —
   path is recorded in DECISIONS.md; file persists in the run worktree for ST19c.
+- ST19c propose ship-gate: keep `[git] isolation=worktree` (default); only
+  override `[agent] adapter=mock` + `mock_dir` in root `.kelix/kelix.toml`
+  locally so pre-propose checkpoint does not commit mock config. Policy edit
+  lands on `kelix/propose-<id>` in `.kelix/worktrees/<id>/`; sidecar copied to
+  root `.kelix/memory/proposal-<id>.json` (gitignored).
 
 ## Run 20260702-120914 (max_iterations)
 10 iterations, 9 verified. Failures: agent exit 143 (timeout); verification failed.

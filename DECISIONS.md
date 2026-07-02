@@ -214,3 +214,9 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
 - **ST19b diagnose:** `kelix diagnose --run-id 20260702-133736` →
   `.kelix/memory/diagnosis-st19b.md` (mock adapter at `.kelix/st19b-mock/`,
   `## Findings` cites run 20260702-133736; zero failed ledger rows in scope).
+- **ST19c propose:** `kelix propose --no-pr --diagnosis-file
+  .kelix/memory/diagnosis-st19b.md` → proposal id `20260702-134659`, branch
+  `kelix/propose-20260702-134659` (HEAD `a6fe858`), sidecar
+  `.kelix/memory/proposal-20260702-134659.json`; `validate_propose_diff` clean;
+  touched `.kelix/prompts/iteration.md` only; prediction: reduce retry_count
+  inflation on repeated ready tasks (mock adapter `.kelix/st19c-mock/`).
