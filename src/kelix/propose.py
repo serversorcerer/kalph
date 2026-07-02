@@ -128,6 +128,32 @@ def default_proposal_sidecar_path(cfg: Config, *, proposal_id: str | None = None
     return cfg.kelix_dir / "memory" / f"proposal-{pid}.json"
 
 
+def latest_proposal_id(cfg: Config) -> str | None:
+    """Return the newest ``proposal-<id>.json`` stem under ``.kelix/memory/``."""
+    memory_dir = cfg.kelix_dir / "memory"
+    if not memory_dir.is_dir():
+        return None
+    candidates = sorted(memory_dir.glob("proposal-*.json"), reverse=True)
+    if not candidates:
+        return None
+    name = candidates[0].name
+    return name.removeprefix("proposal-").removesuffix(".json")
+
+
+def load_proposal_sidecar(cfg: Config, proposal_id: str) -> dict:
+    """Load proposal sidecar JSON; raise ``ProposeError`` when missing."""
+    path = default_proposal_sidecar_path(cfg, proposal_id=proposal_id)
+    if not path.is_file():
+        raise ProposeError(f"proposal sidecar not found: {path}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise ProposeError(f"proposal sidecar unreadable: {path}") from exc
+    if not isinstance(payload, dict):
+        raise ProposeError(f"proposal sidecar invalid: {path}")
+    return payload
+
+
 def changed_paths_since(workdir: Path, base_sha: str) -> list[str]:
     """Return paths changed between *base_sha* and HEAD in *workdir*."""
     if not base_sha:

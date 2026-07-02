@@ -413,7 +413,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   with structured body containing "Metric evidence". Note in commit message:
   live receipt for KV1 pr.py re-judgment.
 
-- [ ] ST14: proposal outcome grading | priority: 44 | status: ready | by: owner | deps: ST13 | phase: T-PROPOSE | req: REQ-TP3
+- [x] ST14: proposal outcome grading | priority: 44 | status: done | by: owner | deps: ST13 | phase: T-PROPOSE | req: REQ-TP3
   details: add record_proposal_outcome(metrics, *, merge_sha|close_reason,
   prediction, merged_at_run_window) and grade_proposal(metrics, proposal_id) in
   metrics.py: slice ledger rows into 5 runs before merge vs 5 after; compare

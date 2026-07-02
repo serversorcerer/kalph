@@ -64,7 +64,21 @@ class ProposalOutcome:
     merge_sha: str = ""
     close_reason: str = ""
     prediction: str = ""
+    merged_at_run_id: str = ""
     grade: str = ""
+
+
+@dataclass
+class _WindowStats:
+    verified_rate: float = 0.0
+    mean_retry_count: float = 0.0
+    breaker_rate: float = 0.0
+    run_count: int = 0
+    row_count: int = 0
+
+
+PROPOSAL_WINDOW_SIZE = 5
+PROPOSAL_MIN_POST_RUNS = 3
 
 
 @dataclass
@@ -121,6 +135,7 @@ def _proposal_outcome_from_dict(data: dict[str, Any]) -> ProposalOutcome:
         merge_sha=str(data.get("merge_sha") or ""),
         close_reason=str(data.get("close_reason") or ""),
         prediction=str(data.get("prediction") or ""),
+        merged_at_run_id=str(data.get("merged_at_run_id") or ""),
         grade=str(data.get("grade") or ""),
     )
 
@@ -220,3 +235,150 @@ def append_run_metrics(
         metrics.fleet_summaries.append(fleet_summary)
     save_metrics(path, metrics)
     return path
+
+
+def unique_run_ids(iterations: list[IterationLedgerRow]) -> list[str]:
+    """Return run ids in first-seen (append) order."""
+    seen: list[str] = []
+    for row in iterations:
+        if row.run_id and row.run_id not in seen:
+            seen.append(row.run_id)
+    return seen
+
+
+def _rows_for_run_ids(
+    iterations: list[IterationLedgerRow],
+    run_ids: set[str],
+) -> list[IterationLedgerRow]:
+    return [row for row in iterations if row.run_id in run_ids]
+
+
+def _window_stats(rows: list[IterationLedgerRow]) -> _WindowStats:
+    if not rows:
+        return _WindowStats()
+    verified_rows = [row for row in rows if row.verified is not None]
+    verified_rate = (
+        sum(1 for row in verified_rows if row.verified) / len(verified_rows)
+        if verified_rows
+        else 0.0
+    )
+    mean_retry = sum(row.retry_count for row in rows) / len(rows)
+    breaker_rate = sum(1 for row in rows if row.circuit_breaker_cause) / len(rows)
+    return _WindowStats(
+        verified_rate=verified_rate,
+        mean_retry_count=mean_retry,
+        breaker_rate=breaker_rate,
+        run_count=len({row.run_id for row in rows if row.run_id}),
+        row_count=len(rows),
+    )
+
+
+def split_proposal_run_windows(
+    iterations: list[IterationLedgerRow],
+    merged_at_run_id: str,
+    *,
+    window_size: int = PROPOSAL_WINDOW_SIZE,
+) -> tuple[list[str], list[str]]:
+    """Return (before_run_ids, after_run_ids) around *merged_at_run_id*."""
+    run_ids = unique_run_ids(iterations)
+    if merged_at_run_id not in run_ids:
+        return [], []
+    idx = run_ids.index(merged_at_run_id)
+    before = run_ids[max(0, idx - window_size + 1) : idx + 1]
+    after = run_ids[idx + 1 : idx + 1 + window_size]
+    return before, after
+
+
+def _compare_window_stats(before: _WindowStats, after: _WindowStats) -> str:
+    """Return improved, regressed, or inconclusive from before/after stats."""
+    better_verified = after.verified_rate > before.verified_rate
+    worse_verified = after.verified_rate < before.verified_rate
+    worse_retry = after.mean_retry_count > before.mean_retry_count
+    worse_breaker = after.breaker_rate > before.breaker_rate
+
+    if better_verified and not worse_retry and not worse_breaker:
+        return "improved"
+    if worse_verified or worse_retry or worse_breaker:
+        return "regressed"
+    return "inconclusive"
+
+
+def grade_proposal(
+    metrics: LoopMetrics,
+    proposal_id: str,
+    *,
+    window_size: int = PROPOSAL_WINDOW_SIZE,
+    min_post_runs: int = PROPOSAL_MIN_POST_RUNS,
+) -> str:
+    """Grade *proposal_id* from ledger windows and persist on *metrics*."""
+    outcome = _find_proposal_outcome(metrics, proposal_id)
+    if outcome is None:
+        raise ValueError(f"unknown proposal_id: {proposal_id}")
+    if not outcome.merged_at_run_id:
+        outcome.grade = "inconclusive"
+        return outcome.grade
+
+    before_ids, after_ids = split_proposal_run_windows(
+        metrics.iterations,
+        outcome.merged_at_run_id,
+        window_size=window_size,
+    )
+    if len(after_ids) < min_post_runs:
+        outcome.grade = "inconclusive"
+        return outcome.grade
+
+    before_stats = _window_stats(_rows_for_run_ids(metrics.iterations, set(before_ids)))
+    after_stats = _window_stats(_rows_for_run_ids(metrics.iterations, set(after_ids)))
+    outcome.grade = _compare_window_stats(before_stats, after_stats)
+    return outcome.grade
+
+
+def _find_proposal_outcome(metrics: LoopMetrics, proposal_id: str) -> ProposalOutcome | None:
+    for outcome in metrics.proposal_outcomes:
+        if outcome.proposal_id == proposal_id:
+            return outcome
+    return None
+
+
+def record_proposal_outcome(
+    metrics: LoopMetrics,
+    *,
+    proposal_id: str,
+    prediction: str = "",
+    merge_sha: str = "",
+    close_reason: str = "",
+    merged_at_run_id: str = "",
+) -> ProposalOutcome:
+    """Append or replace a proposal outcome and grade when merge data allows."""
+    if merge_sha and close_reason:
+        raise ValueError("provide merge_sha or close_reason, not both")
+    if not merge_sha and not close_reason:
+        raise ValueError("merge_sha or close_reason is required")
+
+    existing = _find_proposal_outcome(metrics, proposal_id)
+    outcome = ProposalOutcome(
+        proposal_id=proposal_id,
+        merge_sha=merge_sha,
+        close_reason=close_reason,
+        prediction=prediction or (existing.prediction if existing else ""),
+        merged_at_run_id=merged_at_run_id or (existing.merged_at_run_id if existing else ""),
+    )
+
+    if existing is not None:
+        idx = metrics.proposal_outcomes.index(existing)
+        metrics.proposal_outcomes[idx] = outcome
+    else:
+        metrics.proposal_outcomes.append(outcome)
+
+    if merge_sha and outcome.merged_at_run_id:
+        grade_proposal(metrics, proposal_id)
+    elif close_reason or merge_sha:
+        outcome.grade = "inconclusive"
+
+    return _find_proposal_outcome(metrics, proposal_id) or outcome
+
+
+def default_merged_at_run_id(metrics: LoopMetrics) -> str:
+    """Return the last run id in the ledger (pre-merge boundary default)."""
+    run_ids = unique_run_ids(metrics.iterations)
+    return run_ids[-1] if run_ids else ""

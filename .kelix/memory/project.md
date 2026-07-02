@@ -36,7 +36,9 @@ Durable facts about this repo for future iterations.
 - PR flow lives in `src/kelix/pr.py` (`open_pr`, `build_pr_title`, `build_pr_body`,
   `open_propose_pr`, `build_propose_pr_body`). `kelix propose` opens a PR after
   validation unless `--no-pr`; body sections: Metric evidence, Diagnosis,
-  Predicted improvement, Changed policy surface.
+  Predicted improvement, Changed policy surface. Owner records merge/close via
+  `--record-merge` / `--record-close`; `kelix metrics grade-proposal` re-grades
+  from loop-metrics windows (last 5 runs before vs next 5 after merge run id).
   `kelix run --pr` opens a GitHub PR after `completed` or `max_iterations` runs;
   refuses main/master/empty branches, pushes with `git push -u origin <branch>`,
   never `--force`. Returns None (log-and-skip) on any subprocess failure.

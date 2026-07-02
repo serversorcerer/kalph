@@ -8,8 +8,10 @@ from kelix.metrics import (
     ProposalOutcome,
     append_run_metrics,
     empty_metrics,
+    grade_proposal,
     load_metrics,
     metrics_to_dict,
+    record_proposal_outcome,
     save_metrics,
 )
 
@@ -151,3 +153,96 @@ def test_append_run_metrics_merges_rows(tmp_path: Path):
     assert loaded.iterations[-1].task_id == "T2"
     assert len(loaded.fleet_summaries) == 1
     assert loaded.fleet_summaries[0].fleet_id == "fleet-a"
+
+
+def _rows_for_run(
+    run_id: str,
+    *,
+    verified: list[bool],
+    retries: list[int],
+    breakers: list[bool] | None = None,
+) -> list[IterationLedgerRow]:
+    breakers = breakers or [False] * len(verified)
+    rows: list[IterationLedgerRow] = []
+    for idx, (ok, retry, tripped) in enumerate(
+        zip(verified, retries, breakers, strict=True), start=1
+    ):
+        rows.append(
+            IterationLedgerRow(
+                run_id=run_id,
+                iteration=idx,
+                task_id=f"{run_id}-T{idx}",
+                verified=ok,
+                retry_count=retry,
+                circuit_breaker_cause="consecutive_failures:3" if tripped else "",
+            )
+        )
+    return rows
+
+
+def _grading_fixture_metrics(*, post_run_count: int) -> LoopMetrics:
+    iterations: list[IterationLedgerRow] = []
+    for run_id in ["r01", "r02", "r03", "r04", "r05"]:
+        iterations.extend(
+            _rows_for_run(
+                run_id,
+                verified=[False, False],
+                retries=[2, 3],
+                breakers=[True, False],
+            )
+        )
+    after_ids = [f"r0{i}" for i in range(6, 6 + post_run_count)]
+    for run_id in after_ids:
+        iterations.extend(
+            _rows_for_run(
+                run_id,
+                verified=[True, True],
+                retries=[0, 0],
+                breakers=[False, False],
+            )
+        )
+    return LoopMetrics(iterations=iterations)
+
+
+def test_grade_proposal_improved_window():
+    metrics = _grading_fixture_metrics(post_run_count=5)
+    record_proposal_outcome(
+        metrics,
+        proposal_id="prop-improved",
+        merge_sha="abc123",
+        prediction="fewer retries",
+        merged_at_run_id="r05",
+    )
+    outcome = metrics.proposal_outcomes[0]
+    assert outcome.grade == "improved"
+
+
+def test_grade_proposal_inconclusive_few_post_runs():
+    metrics = _grading_fixture_metrics(post_run_count=2)
+    record_proposal_outcome(
+        metrics,
+        proposal_id="prop-wait",
+        merge_sha="def456",
+        prediction="wait for more runs",
+        merged_at_run_id="r05",
+    )
+    outcome = metrics.proposal_outcomes[0]
+    assert outcome.grade == "inconclusive"
+
+
+def test_grade_proposal_regrade_updates_existing(tmp_path: Path):
+    metrics = _grading_fixture_metrics(post_run_count=2)
+    record_proposal_outcome(
+        metrics,
+        proposal_id="prop-regrade",
+        merge_sha="ghi789",
+        prediction="later proof",
+        merged_at_run_id="r05",
+    )
+    assert metrics.proposal_outcomes[0].grade == "inconclusive"
+
+    metrics.iterations.extend(
+        _rows_for_run("r08", verified=[True, True], retries=[0, 0], breakers=[False, False])
+    )
+    assert grade_proposal(metrics, "prop-regrade") == "improved"
+    assert metrics.proposal_outcomes[0].grade == "improved"
