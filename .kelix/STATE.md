@@ -3,8 +3,8 @@
 - milestone: v0.4
 - phase: P-AUDIT
 - current_task: selecting
-- last_task: KE19
-- last_verified_commit: ddcce7e890c456b380f6b40d25ad18523bf72f49
-- done: 75
+- last_task: KE20
+- last_verified_commit: 774f4c4089d4d47dfec0f7bb3782ce14aa8216dd
+- done: 76
 - total: 106
 - blockers:
