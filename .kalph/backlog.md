@@ -20,7 +20,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   round-trip, selection order (priority, owner-beats-kalph, deps blocking), and
   malformed-line tolerance.
 
-- [ ] KB2: memory module tests | priority: 80 | status: ready | by: owner
+- [x] KB2: memory module tests | priority: 80 | status: done | by: owner
   rationale: memory (episodes, skills, retrospective) shipped in the loop commit without direct unit tests
   details: create tests/test_memory.py testing src/kalph/memory.py: record_episode +
   load_episodes round-trip and corrupt-line tolerance; episode_digest contains rationale

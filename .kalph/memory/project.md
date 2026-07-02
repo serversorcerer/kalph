@@ -17,4 +17,7 @@ Durable facts about this repo for future iterations.
   agents; coordination is files + git only).
 - Tests use tests/conftest.py helpers `make_repo` / `write_mock_script` and the
   mock adapter; never call a real agent CLI in tests.
+- Memory module unit tests live in `tests/test_memory.py` (episodes round-trip,
+  corrupt-line tolerance, digests, skill frontmatter parsing, retrospectives).
+  Use `tmp_path` fixtures; never write to the real `.kalph/` directory in tests.
 - Decisions already made are in DECISIONS.md; do not re-litigate them.
