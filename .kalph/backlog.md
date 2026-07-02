@@ -40,7 +40,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   "sudo rm x"; allows "git status", "pytest -q", "git push origin kalph/run-1";
   deny_extra patterns are honored; allow_only mode blocks anything not prefixed.
 
-- [ ] KB4: prioritization rubric doc | priority: 70 | status: ready | by: owner
+- [x] KB4: prioritization rubric doc | priority: 70 | status: done | by: owner
   rationale: priority logic must be legible (mission requirement), documented before autonomy features build on it
   details: write docs/prioritization.md documenting the scoring rubric: owner intent
   always first (owner tasks outrank kalph-proposed ones), then correctness/broken

@@ -24,3 +24,5 @@ Durable facts about this repo for future iterations.
   for token shapes, CommandPolicy deny/allow/allow_only/deny_extra). No tmp_path
   needed — pure functions.
 - Decisions already made are in DECISIONS.md; do not re-litigate them.
+- Prioritization rubric for backlog authoring and selection lives in
+  `docs/prioritization.md` (owner-first, priority bands, decomposition/blocked rules).
