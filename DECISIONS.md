@@ -220,3 +220,7 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   `.kelix/memory/proposal-20260702-134659.json`; `validate_propose_diff` clean;
   touched `.kelix/prompts/iteration.md` only; prediction: reduce retry_count
   inflation on repeated ready tasks (mock adapter `.kelix/st19c-mock/`).
+- **ST19d record merge:** `kelix propose --record-merge a6fe858 --proposal-id
+  20260702-134659` → `loop-metrics.json` `proposal_outcomes[]` entry with
+  prediction preserved, `merged_at_run_id` `20260702-133736`, grade
+  `inconclusive` (no post-merge runs yet).

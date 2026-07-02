@@ -477,7 +477,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   the proposal id; record proposal id and touched files in DECISIONS.md pending
   section. Acceptance: `pytest -q` pass.
 
-- [ ] ST19d: self-tuning proof — record proposal outcome | priority: 41 | status: ready | by: owner | deps: ST19c | phase: T-PROPOSE | req: REQ-TP3
+- [x] ST19d: self-tuning proof — record proposal outcome | priority: 41 | status: done | by: owner | deps: ST19c | phase: T-PROPOSE | req: REQ-TP3
   rationale: [ST19] ship gate step 4 — owner merge/close captured in metrics
   details: record the ST19c proposal via `kelix propose --record-merge <sha>` or
   `--record-close <reason>` (use the propose branch HEAD sha or a documented
