@@ -3,8 +3,8 @@
 - milestone: V
 - phase: V-PROOF
 - current_task: selecting
-- last_task: KV16
-- last_verified_commit: 5e48f741d5072dc43472a1feb14cff8c27db546a
-- done: 104
+- last_task: KV17
+- last_verified_commit: 993aac127b2433d0f8e4f6160dee0158c922f178
+- done: 105
 - total: 106
 - blockers:
