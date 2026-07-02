@@ -23,6 +23,8 @@ class AgentConfig:
     # Extra args appended to the kiro adapter invocation (e.g. ["--agent", "kelix"]).
     kiro_args: list[str] = field(default_factory=list)
     timeout_seconds: int = 1800
+    # Kill the agent if stdout/stderr is silent this long (seconds). 0 disables.
+    inactivity_timeout_seconds: int = 300
     # For the `mock` adapter: directory of numbered scripts (see adapters.py).
     mock_dir: str = ""
 

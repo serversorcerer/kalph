@@ -236,7 +236,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   the retrospective. Tests: mock agent that commits without RATIONALE gets
   the commit subject; no-commit no-rationale iteration gets the flag.
 
-- [ ] PC18: output-inactivity watchdog in adapters | priority: 74 | status: ready | by: owner | phase: P-HARDEN | req: REQ-H2
+- [x] PC18: output-inactivity watchdog in adapters | priority: 74 | status: done | by: owner | phase: P-HARDEN | req: REQ-H2
   rationale: [P-HARDEN/REQ-H2] fleet session 2's agent sat idle ~20 min after finishing (D13); unattended means nobody is there to kill it
   details: in src/kelix/adapters.py, run the agent with Popen and a reader
   thread; if no stdout/stderr bytes arrive for

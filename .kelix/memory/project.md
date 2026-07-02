@@ -148,6 +148,13 @@ Durable facts about this repo for future iterations.
   `.kelix/runs/<id>/context-<n>.json` (under RUNNER_BOOKKEEPING `.kelix/runs`).
   Tests in `tests/test_prompt.py` (REQ-C4 relevance regression) and
   `tests/test_loop.py` (manifest file written).
+- Adapter inactivity watchdog (`adapters._run_process`): uses Popen plus a reader
+  thread; `[agent].inactivity_timeout_seconds` (default 300, 0 disables) kills
+  the process when no stdout/stderr bytes arrive for that interval. Hard
+  `[agent].timeout_seconds` unchanged (exit 124, timed_out=True). Inactivity
+  timeout sets timed_out=True with the observed exit code. Tests in
+  `tests/test_adapters.py` use flush=True Python scripts because piped shell
+  stdout is block-buffered.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to
