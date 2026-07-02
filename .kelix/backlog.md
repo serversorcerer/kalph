@@ -526,7 +526,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   head -1` line number is > 20; `pytest -q` and `ruff check src tests` pass
   unchanged.
 
-- [ ] KE2: docs/index.md reposition | priority: 91 | status: proposed | by: kelix | phase: P-REPOS | req: REQ-R2
+- [x] KE2: docs/index.md reposition | priority: 91 | status: done | by: kelix | phase: P-REPOS | req: REQ-R2
   details: replace docs/index.md hero (currently "Ralph loop rebuilt for Kiro")
   with agent-agnostic framing matching KE1; add Agents section linking
   docs/kiro.md (deepest integration) and future docs/agents/*.md placeholders

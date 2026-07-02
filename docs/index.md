@@ -1,20 +1,33 @@
 # Kelix documentation
 
-**The [Ralph loop](https://ghuntley.com/ralph/), rebuilt for
-[Kiro](https://kiro.dev).**
+**The loop that climbs.** Ralph runs in circles; Kelix comes back higher.
 
-Kelix runs a coding agent in a loop against a static prompt: every iteration
-is a fresh, stateless agent process; all state lives in files and git history;
-the loop wins through repetition, not cleverness. Kelix adds persistent
-memory, self-improvement, legible prioritization, first-class Kiro
-integration, and a file-coordinated fleet mode — so you can write a spec once
-and wake up to reviewable PRs.
+Kelix runs any headless coding agent in a loop against a static prompt: every
+iteration is a fresh, stateless process; all state lives in files and git
+history; the loop wins through repetition, not cleverness. Use **Claude Code**,
+**Codex CLI**, **Cursor**, **Gemini CLI**, or your own CLI adapter — Kelix
+keeps [Ralph's](https://ghuntley.com/ralph/) core and adds persistent memory,
+self-improvement from loop outcomes, legible prioritization, and a
+file-coordinated fleet mode — so you can write a spec once and wake up to
+reviewable PRs.
 
 ```bash
 pipx install kelix
 cd your-repo && kelix init
 kelix run --max-iterations 25 --pr
 ```
+
+## Agents
+
+Kelix is agent-agnostic: configure one adapter in `.kelix/kelix.toml` and the
+loop stays the same.
+
+- **[Kiro guide](kiro.md)** — deepest integration: headless adapter, spec→backlog
+  import, the `.kiro/` steering/agent/hooks package, and MCP server registration.
+- **[Cursor guide](agents/cursor.md)** — *coming soon*
+- **[Claude Code guide](agents/claude.md)** — *coming soon*
+- **[Codex CLI guide](agents/codex.md)** — *coming soon*
+- **[Gemini CLI guide](agents/gemini.md)** — *coming soon*
 
 ## Guides
 
