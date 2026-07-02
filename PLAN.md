@@ -39,8 +39,9 @@ itself. Record the switchover in DECISIONS.md.
 - [x] B1: Backlog model .kalph/backlog.md: priority, rationale, status, deps; parser + writer; selection (evidence: KB1 by Kalph run 20260702-002215)
 - [x] B2: Scoring rubric doc (evidence: KB4 docs/prioritization.md by Kalph); autonomy-aware proposed-task selection -> KB5
 - [x] B3: Decomposition rule: oversized task -> checklist subtasks before execution (evidence: prompt contract step 3 + rubric doc)
-- [ ] B4: Branch-per-task + PR flow via gh (kalph/<slug>, PR with evidence; never direct to main)
-- [ ] B5: Tracker sync adapter interface + Linear reference adapter (inbound issues sanitized as data; outbound status/comments; non-fatal failures)
+- [x] B4: Branch-per-task + PR flow via gh (kalph/<slug>, PR with evidence; never direct to main) (evidence: KB6 pr.py + test_pr.py, main/master refusal + no --force)
+- [x] B5: Tracker sync adapter interface + Linear reference adapter (inbound sanitized as data; outbound status/comments; non-fatal) (evidence: sync/ + test_sync.py 11 tests; injection markers flagged, secrets scrubbed on push)
+- [x] B2b: autonomy-aware selection (evidence: KB5 select_next autonomy param)
 
 ## Phase 4 — Kiro integration
 
