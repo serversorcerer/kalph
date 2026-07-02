@@ -3,8 +3,8 @@
 - milestone: post-V
 - phase: DRIFT-FIX
 - current_task: selecting
-- last_task: DR10
-- last_verified_commit: d38386c
-- done: 116
+- last_task: DR11
+- last_verified_commit: e602fe2
+- done: 117
 - total: 118
 - blockers:
