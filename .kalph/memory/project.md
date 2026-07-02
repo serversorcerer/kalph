@@ -129,3 +129,6 @@ Durable facts about this repo for future iterations.
 
 ## Run 20260702-003053 (completed)
 4 iterations, 3 verified. Failures: verification failed.
+
+## Run 20260702-022639 (max_iterations)
+10 iterations, 10 verified. Clean run.
