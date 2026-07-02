@@ -20,4 +20,7 @@ Durable facts about this repo for future iterations.
 - Memory module unit tests live in `tests/test_memory.py` (episodes round-trip,
   corrupt-line tolerance, digests, skill frontmatter parsing, retrospectives).
   Use `tmp_path` fixtures; never write to the real `.kalph/` directory in tests.
+- Security module unit tests live in `tests/test_security.py` (scrub/contains_secret
+  for token shapes, CommandPolicy deny/allow/allow_only/deny_extra). No tmp_path
+  needed — pure functions.
 - Decisions already made are in DECISIONS.md; do not re-litigate them.

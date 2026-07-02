@@ -30,7 +30,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   retrospective.md with status and a "For the owner" section when failures exist.
   Use tmp_path fixtures; do not touch the real .kalph directory.
 
-- [ ] KB3: security module tests | priority: 75 | status: ready | by: owner
+- [x] KB3: security module tests | priority: 75 | status: done | by: owner
   rationale: the scrubber and command policy are safety-critical and must have regression tests before Phase 6 relies on them
   details: create tests/test_security.py testing src/kalph/security.py: scrub() redacts
   a GitHub token (ghp_ + 30 alphanumerics), a Kiro key (ksk_...), an AWS AKIA key, a
