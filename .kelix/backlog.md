@@ -590,7 +590,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   details: create docs/agents/codex.md — same structure as KE9 for OpenAI Codex
   CLI; upstream-sourced banner. Acceptance: TOML parses via load_config.
 
-- [ ] KE11: gemini agent guide (upstream-sourced) | priority: 82 | status: ready | by: owner | deps: KE7 | phase: P-AGENT | req: REQ-A2
+- [x] KE11: gemini agent guide (upstream-sourced) | priority: 82 | status: done | by: owner | deps: KE7 | phase: P-AGENT | req: REQ-A2
   details: create docs/agents/gemini.md — same structure as KE9 for Gemini CLI;
   upstream-sourced banner. Acceptance: TOML parses via load_config.
 

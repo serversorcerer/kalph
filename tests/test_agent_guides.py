@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CURSOR_GUIDE = ROOT / "docs" / "agents" / "cursor.md"
 CLAUDE_GUIDE = ROOT / "docs" / "agents" / "claude.md"
 CODEX_GUIDE = ROOT / "docs" / "agents" / "codex.md"
+GEMINI_GUIDE = ROOT / "docs" / "agents" / "gemini.md"
 
 _TOML_FENCE_RE = re.compile(r"```toml\n(.*?)```", re.DOTALL)
 _HEADING_RE = re.compile(r"^## (.+)$", re.MULTILINE)
@@ -92,6 +93,26 @@ def test_codex_guide_loop_heading_parity():
 
 @pytest.mark.parametrize("toml_block", _toml_blocks(CODEX_GUIDE.read_text(encoding="utf-8")))
 def test_codex_guide_toml_blocks_load(toml_block: str, tmp_path: Path):
+    kelix_dir = tmp_path / ".kelix"
+    kelix_dir.mkdir()
+    (kelix_dir / "kelix.toml").write_text(toml_block + "\n", encoding="utf-8")
+    load_config(tmp_path)
+
+
+def test_gemini_guide_has_upstream_sourced_banner():
+    text = GEMINI_GUIDE.read_text(encoding="utf-8")
+    assert "**Not Kelix CI-tested" in text
+    assert ADAPTER_PRESET_COMMANDS["gemini"] in text
+
+
+def test_gemini_guide_loop_heading_parity():
+    headings = _headings(GEMINI_GUIDE.read_text(encoding="utf-8"))
+    for required in AGENT_GUIDE_LOOP_HEADINGS:
+        assert required in headings, f"missing ## {required}"
+
+
+@pytest.mark.parametrize("toml_block", _toml_blocks(GEMINI_GUIDE.read_text(encoding="utf-8")))
+def test_gemini_guide_toml_blocks_load(toml_block: str, tmp_path: Path):
     kelix_dir = tmp_path / ".kelix"
     kelix_dir.mkdir()
     (kelix_dir / "kelix.toml").write_text(toml_block + "\n", encoding="utf-8")
