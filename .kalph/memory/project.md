@@ -52,8 +52,10 @@ Durable facts about this repo for future iterations.
   unfalsifiable adjectives.
 - OWNER DIRECTIVES (D16, binding on all iterations): (1) planning asks the
   owner structured questions before drafting — never guess a decision the
-  owner would want to make; (2) MCP and skills modules are FROZEN — keep
-  them green, add nothing; (3) context quality carries half the value —
+  owner would want to make; (2) MCP and skills PLUMBING are FROZEN — keep
+  them green, add nothing; skill LEARNING (acquisition that fires, measured
+  efficacy) is in scope and lives in milestone v0.3 T-SKILLS (D17);
+  (3) context quality carries half the value —
   when trading effort, prefer improving what gets injected into prompts
   over adding features; (4) audacity: prefer the task that pushes a
   boundary (self-tuning, self-planning) over routine plumbing when both

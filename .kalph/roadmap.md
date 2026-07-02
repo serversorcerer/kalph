@@ -193,6 +193,15 @@ ships — the onramp's first real use is planning the milestone after it):
   gate as any code change. A merged proposal's prediction is checked
   against the next runs' ledger and the result is recorded (the loop grades
   its own homework).
+- Phase T-SKILLS: skill learning that actually fires (D17). Evidence: in
+  ~20 live v0.1 iterations the prompt's acquisition rule produced zero
+  skills. Fix the mechanism, not the wording: at retrospective time the
+  runner runs a distillation pass over the run's verified episodes (which
+  tasks took retries, what unblocked them) and writes candidate skills as
+  `proposed` artifacts the owner can keep or delete; the ledger tracks
+  skill injections (via the context manifest) vs. task outcomes so a
+  skill's efficacy is a number, not a feeling. Plumbing stays frozen —
+  same format, same directories.
 - Staged next: autonomous roadmapping (v0.4 — Kalph drafts the next
   milestone from repo observation; owner edits instead of authors), then
   self-reviewing fleet chains (v0.5 — review/fix/re-verify cycles between

@@ -98,8 +98,10 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   (1) Planning must interview the owner, not guess — `kalph plan` gains a
   question step (hybrid: live terminal Q&A when a TTY exists, committed
   QUESTIONS.md otherwise; owner was offered the choice and skipped, so the
-  recommended hybrid stands). (2) MCP/skills are FROZEN: they keep working
-  and stay tested, zero new investment. (3) Context is 50% of the value:
+  recommended hybrid stands).   (2) MCP/skills are FROZEN: they keep working
+  and stay tested, zero new investment. Clarified on owner question: the
+  freeze covers skills PLUMBING (format, portability, MCP exposure) — skill
+  LEARNING is core and lives in v0.3 (see D17). (3) Context is 50% of the value:
   new P-CONTEXT phase — a context compiler that fills half the prompt
   budget with task-relevant material chosen by relevance, not recency, and
   logs a context manifest per iteration so context quality is auditable.
@@ -107,3 +109,13 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   Kalph measures its own iteration outcomes and proposes changes to its
   own prompt/policies as reviewable PRs, never self-applied; staged next:
   autonomous roadmapping (v0.4), self-reviewing fleet (v0.5).
+- D17 (v0.3 scope): Skill LEARNING joins the self-tuning milestone. Evidence
+  from the v0.1 proof runs: every live prompt showed "(no skills yet)" — in
+  ~20 iterations the acquisition rule in the prompt never fired once. A
+  prompt suggestion alone does not produce learning; acquisition must be a
+  step the runner drives (retrospective-time distillation from verified
+  episodes), and skill efficacy must be measured (was a skill injected, was
+  the task it matched verified faster/with fewer retries). Self-tuning =
+  the loop learning policies; skill building = the loop learning
+  procedures; same audacious bet at two granularities. Skills plumbing
+  (format/portability/MCP exposure) stays frozen per D16.
