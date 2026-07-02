@@ -191,7 +191,7 @@ Every task below names its phase and the REQ it covers in `details:`.
 
 ### Phase P-CONTEXT (the context compiler — 50% of the value, D16)
 
-- [ ] PC20: relevance scorer for memory and episodes | priority: 81 | status: ready | by: owner | phase: P-CONTEXT | req: REQ-C2
+- [x] PC20: relevance scorer for memory and episodes | priority: 81 | status: done | by: owner | phase: P-CONTEXT | req: REQ-C2
   rationale: [P-CONTEXT/REQ-C2] a fresh agent should get the context THIS task needs, not whatever happened most recently
   details: add src/kelix/context.py with score(text, query) -> float using
   stdlib only: lowercase token overlap weighted by inverse frequency across

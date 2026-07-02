@@ -123,6 +123,12 @@ Durable facts about this repo for future iterations.
   phase title, REQ coverage table (id, status, covering task id), and blockers;
   repos without a roadmap keep the prior claims/runs/mailbox output only.
   Tests in `tests/test_fleet.py`.
+- Context relevance scorer lives in `src/kelix/context.py` (`score`, `select`).
+  Stdlib-only token overlap weighted by IDF across the candidate set; empty query
+  falls back to recency (later candidates = more recent). `memory.episode_digest`
+  and `memory.skills_digest` accept optional `query` and `budget_chars`; when
+  query is set they call `select()`, otherwise behavior is unchanged. Tests in
+  `tests/test_context.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

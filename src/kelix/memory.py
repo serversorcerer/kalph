@@ -68,20 +68,35 @@ def load_episodes(cfg: Config, limit: int = 50) -> list[dict]:
     return episodes[-limit:]
 
 
-def episode_digest(cfg: Config) -> str:
+def _format_episode_line(ep: dict) -> str:
+    outcome = "FAILED: " + ep["failure"] if ep.get("failure") else (
+        "verified" if ep.get("verified") else "ok (unverified)"
+    )
+    rationale = ep.get("rationale") or "(no rationale logged)"
+    return f"- [{ep.get('ts', '?')}] {rationale} -> {outcome}"
+
+
+def _default_budget(lines: list[str]) -> int:
+    return sum(len(line) for line in lines) + len(lines)
+
+
+def episode_digest(
+    cfg: Config,
+    query: str = "",
+    budget_chars: int | None = None,
+) -> str:
     """Compact what-worked/what-failed digest for prompt injection."""
     if not cfg.memory.enabled:
         return ""
     episodes = load_episodes(cfg, limit=cfg.memory.episodes_in_digest)
     if not episodes:
         return ""
-    lines = []
-    for ep in episodes:
-        outcome = "FAILED: " + ep["failure"] if ep.get("failure") else (
-            "verified" if ep.get("verified") else "ok (unverified)"
-        )
-        rationale = ep.get("rationale") or "(no rationale logged)"
-        lines.append(f"- [{ep.get('ts', '?')}] {rationale} -> {outcome}")
+    lines = [_format_episode_line(ep) for ep in episodes]
+    if query.strip():
+        from .context import select
+
+        budget = budget_chars if budget_chars is not None else _default_budget(lines)
+        return "\n".join(select(lines, query, budget))
     return "\n".join(lines)
 
 
@@ -125,7 +140,12 @@ def list_skills(cfg: Config, workdir: Path | None = None) -> list[tuple[str, str
     return list(seen.values())
 
 
-def skills_digest(cfg: Config, workdir: Path | None = None) -> str:
+def skills_digest(
+    cfg: Config,
+    workdir: Path | None = None,
+    query: str = "",
+    budget_chars: int | None = None,
+) -> str:
     """Progressive loading, Kiro-style: names + descriptions + path. The agent
     reads the full skill file only when relevant, keeping the prompt cheap."""
     if not cfg.memory.enabled:
@@ -136,6 +156,11 @@ def skills_digest(cfg: Config, workdir: Path | None = None) -> str:
     lines = [
         f"- {name}: {desc}\n  full steps: {path}" for name, desc, path in skills
     ]
+    if query.strip():
+        from .context import select
+
+        budget = budget_chars if budget_chars is not None else _default_budget(lines)
+        return "\n".join(select(lines, query, budget))
     return "\n".join(lines)
 
 
