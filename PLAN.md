@@ -19,7 +19,7 @@ itself. Record the switchover in DECISIONS.md.
 
 - [x] C1: Repo scaffold: pyproject.toml, package layout, LICENSE (Apache-2.0), .gitignore, stub README (evidence: pip install -e . succeeds)
 - [x] C2: Config loader (kalph.toml): agent adapter cmd, verify commands, caps, budgets; defaults safe (evidence: 8 tests green)
-- [ ] C3: Agent adapter interface + `kiro` adapter (headless kiro-cli) + `mock` adapter (scripted) + `cmd` adapter (arbitrary CLI)
+- [x] C3: Agent adapter interface + `kiro` adapter (headless kiro-cli) + `mock` adapter (scripted) + `cmd` adapter (arbitrary CLI) (evidence: 16 tests green, lint clean)
 - [ ] C4: Iteration engine: fresh process, static prompt assembly (template + data slots), transcript capture per iteration
 - [ ] C5: Loop runner `kalph run`: sentinel detection, --max-iterations, per-run worktree+branch isolation, auto-checkpoint
 - [ ] C6: Verification gate: run config verify commands after each iteration; verified-done rule; failed task stays on top
