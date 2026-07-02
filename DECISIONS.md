@@ -33,3 +33,17 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
 - D7 (P0): License Apache-2.0 per mission (patent grant matters for an agent
   tool employers will run); MIT rejected only because the mission specifies
   Apache-2.0.
+- D8 (P1->P2, SELF-HOSTING SWITCHOVER): Parity demo green (test_parity_demo.py,
+  commit after C8). From this commit on, the remaining build backlog lives in
+  `.kalph/backlog.md` and is worked by `kalph run` against this repo, using
+  the `cmd` adapter with the locally available headless agent
+  (`cursor-agent --force -p`), since kiro-cli is not installed on the build
+  machine. Iterations run by Kalph itself are identifiable by run branches
+  (`kalph/run-*`), transcripts under `.kalph/runs/`, and episode records.
+  Where a Kalph iteration fails or the bootstrap session must intervene
+  (owner-style steering via backlog edits, or direct implementation when an
+  iteration is beyond the loop's current capability), that is recorded here
+  and in the final report — the mission asks precisely "which iterations were
+  run by Kalph itself."
+- D9 (P2): Verification commands for the Kalph repo itself: `pytest -q` and
+  `ruff check src tests` — the same gate CI will enforce.

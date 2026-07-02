@@ -24,7 +24,9 @@ itself. Record the switchover in DECISIONS.md.
 - [x] C5: Loop runner `kalph run`: sentinel detection, --max-iterations, per-run worktree+branch isolation, auto-checkpoint (evidence: test_loop.py green incl. worktree isolation + checkpoint tests)
 - [x] C6: Verification gate: run config verify commands after each iteration; verified-done rule; failed task stays on top (evidence: sentinel-lie test proves red verification blocks completion)
 - [x] C7: Circuit breaker: N consecutive errors/no-diff -> stop + diagnosis file (evidence: no-diff breaker + reset-after-success tests)
-- [ ] C8: Parity demo: toy repo fixture with 5-task plan, mock agent, end-to-end green (this is the regression baseline test)
+- [x] C8: Parity demo: toy repo fixture with 5-task plan, mock agent, end-to-end green (evidence: test_parity_demo.py — 5 iterations, all verified, sentinel honored, main untouched)
+
+**PHASE 1 COMPLETE — self-hosting switchover: remaining tasks migrate to .kalph/backlog.md and are run through the Kalph loop itself. See DECISIONS.md D8.**
 
 ## Phase 2 — Memory
 
