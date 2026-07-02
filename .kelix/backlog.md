@@ -993,7 +993,7 @@ Owner context: `.kelix/phases/DRIFT-FIX/CONTEXT.md`. Fleet config:
   `.kelix/` and backlog archive paths to be excluded. At least 8 test functions.
   Acceptance: pytest tests/test_doc_drift.py -q pass.
 
-- [ ] DR12: doc-drift fleet closure gate | priority: 84 | status: ready | by: owner | deps: DR11 | phase: DRIFT-FIX | req: REQ-DR5
+- [x] DR12: doc-drift fleet closure gate | priority: 84 | status: done | by: owner | deps: DR11 | phase: DRIFT-FIX | req: REQ-DR5
   details: run full gate: env PYTHONPATH=src pytest -q; ruff check src tests;
   kelix lint --path . Mark all DR* done in backlog only if DR11 tests pass.
   Update .kelix/STATE.md: phase DRIFT-FIX complete, last_task DR12, done count

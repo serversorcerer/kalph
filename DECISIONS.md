@@ -226,3 +226,12 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   carries the value sentence and links the demo receipt (KV17); `kelix lint`,
   `pytest -q`, and `ruff check src tests` exit 0 on this repo post-cut.
   Milestone V closes; no further V-* backlog tasks remain.
+- D25 (DRIFT-FIX fleet, REQ-DR5): Doc-drift fleet run `20260702-191513`
+  (builder-1, builder-2, scribe-1, verifier-1 worktrees) aligned user-facing
+  copy with post-KV3 reality — verified commits on `kelix/run-*` branches, owner
+  merge, no automated PR opening. Twelve DR tasks closed; 16 files touched
+  (README, docs, integrations, prompt, gitutil, fleet roles, DECISIONS D12
+  footnote, value-demo header, CHANGELOG, SECURITY cross-check,
+  `tests/test_doc_drift.py`, `tests/test_value_demo.py`). Regression gate:
+  `pytest tests/test_doc_drift.py -q` green; full suite + `ruff check src tests`
+  + `kelix lint` exit 0. Backlog 118/118; phase DRIFT-FIX complete.
