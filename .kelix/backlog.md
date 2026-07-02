@@ -564,7 +564,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 
 ### Phase P-AGENT — Named adapters + guides
 
-- [ ] KE7: named adapter presets in config | priority: 86 | status: ready | by: owner | phase: P-AGENT | req: REQ-A1
+- [x] KE7: named adapter presets in config | priority: 86 | status: done | by: owner | phase: P-AGENT | req: REQ-A1
   details: in src/kelix/config.py and adapters.py extend make_adapter/load validation
   so adapter names claude|codex|cursor|gemini resolve internally to CmdAdapter
   with preset command templates (stdlib only, no new subprocess machinery).
