@@ -918,7 +918,7 @@ Owner context: `.kelix/phases/DRIFT-FIX/CONTEXT.md`. Fleet config:
   case-insensitive for `open pr`, `land as pr`, `--pr`, `kelix sync` → zero
   matches; full file still contains value sentence in first 30 lines.
 
-- [ ] DR3: memory-and-skills propose and review path | priority: 93 | status: ready | by: owner | phase: DRIFT-FIX | req: REQ-DR2
+- [x] DR3: memory-and-skills propose and review path | priority: 93 | status: done | by: owner | phase: DRIFT-FIX | req: REQ-DR2
   details: edit docs/memory-and-skills.md. Update proposal_outcomes[] paragraph
   (~line 192): kelix propose creates a dedicated branch + sidecar JSON;
   owner merges manually (no pr.py since KV3). Update retrospective section
@@ -927,14 +927,14 @@ Owner context: `.kelix/phases/DRIFT-FIX/CONTEXT.md`. Fleet config:
   review skill commits on run branches. Acceptance: zero matches for `via pr.py`,
   `opening a PR`, `tuning PR` in that file; prose cites branch + owner merge.
 
-- [ ] DR4: fleet.md loop contract language | priority: 92 | status: ready | by: owner | phase: DRIFT-FIX | req: REQ-DR2
+- [x] DR4: fleet.md loop contract language | priority: 92 | status: done | by: owner | phase: DRIFT-FIX | req: REQ-DR2
   details: docs/fleet.md — replace "one task, verified-done, PRs only" (~line 80)
   and "everything lands as separate human-reviewed PRs" (~line 173) with
   verified commits on per-agent kelix/run-* branches; owner merges. Keep
   fleet receipt example block intact. Acceptance: zero `PRs only` or `human-reviewed PRs`
   in fleet.md; fleet proof links unchanged.
 
-- [ ] DR5: kiro docs and steering PR language | priority: 91 | status: ready | by: owner | phase: DRIFT-FIX | req: REQ-DR2
+- [x] DR5: kiro docs and steering PR language | priority: 91 | status: done | by: owner | phase: DRIFT-FIX | req: REQ-DR2
   details: update docs/kiro.md steering table row for kelix.md (verified-done,
   run branches, owner merge — not "PRs-only"). update
   integrations/kiro/steering/kelix.md line ~33 "arrives as PRs" → verified
@@ -956,14 +956,14 @@ Owner context: `.kelix/phases/DRIFT-FIX/CONTEXT.md`. Fleet config:
   pytest tests/test_fleet.py tests/test_gitutil.py -q pass (add test_gitutil import
   if missing — use subprocess gitutil tests via existing suite).
 
-- [ ] DR8: DECISIONS D12 historical footnote | priority: 88 | status: ready | by: owner | phase: DRIFT-FIX | req: REQ-DR2
+- [x] DR8: DECISIONS D12 historical footnote | priority: 88 | status: done | by: owner | phase: DRIFT-FIX | req: REQ-DR2
   details: DECISIONS.md D12 (~lines 62-67): keep historical "mergeable PRs"
   narrative for dogfood but add footnote that pr.py and test_pr.py were SCRAP'd
   in KV3; live path is verified commits on run branches + owner git merge.
   Remove implication that test_pr.py still exists. Acceptance: DECISIONS.md
   contains "KV3" near D12; no bare reference to test_pr.py as current coverage.
 
-- [ ] DR9: value-demo and CHANGELOG honesty labels | priority: 87 | status: ready | by: owner | phase: DRIFT-FIX | req: REQ-DR4
+- [x] DR9: value-demo and CHANGELOG honesty labels | priority: 87 | status: done | by: owner | phase: DRIFT-FIX | req: REQ-DR4
   details: docs/proof/value-demo.md — add prominent **Mock adapter** label in
   the opening paragraph; add one-line pointer to dogfood live receipt
   (final-report § D1). CHANGELOG.md — if "branch-per-task PRs" appears without

@@ -63,8 +63,8 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   GitHub remote (creating one would publish throwaway code and burn tokens on
   network flakes), so "mergeable PRs" is proven as run branches that merge
   cleanly into main with green tests via `git merge` — the exact operation a
-  PR merge performs. The `--pr` path itself is covered by test_pr.py against
-  a stubbed `gh`.
+  PR merge performs. *(KV3 removed `pr.py`, `test_pr.py`, and `--pr`; the live
+  path is verified commits on `kelix/run-*` branches plus owner `git merge`.)*
 - D13 (P8, bootstrap intervention): In fleet session 2 the verifier's
   cursor-agent process finished its work (R1 commit + mailbox review note
   present on its branch) but never exited; after ~20 minutes the session
