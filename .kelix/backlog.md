@@ -677,7 +677,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 
 ### Phase P-COMPARE — Honest comparison
 
-- [ ] KE27: docs/compare.md draft | priority: 66 | status: ready | by: owner | deps: KE16 | phase: P-COMPARE | req: REQ-CM1
+- [x] KE27: docs/compare.md draft | priority: 66 | status: done | by: owner | deps: KE16 | phase: P-COMPARE | req: REQ-CM1
   details: create docs/compare.md comparing Kelix vs plain Ralph vs Claude Code
   alone vs Codex alone vs GSD-style orchestrators. Axes: state persistence,
   verified-done rate, unattended runtime, token cost per verified task,
