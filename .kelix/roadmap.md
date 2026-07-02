@@ -202,7 +202,96 @@ ships — the onramp's first real use is planning the milestone after it):
   skill injections (via the context manifest) vs. task outcomes so a
   skill's efficacy is a number, not a feeling. Plumbing stays frozen —
   same format, same directories.
-- Staged next: autonomous roadmapping (v0.4 — Kelix drafts the next
+- Staged next: autonomous roadmapping (v0.5 — Kelix drafts the next
   milestone from repo observation; owner edits instead of authors), then
-  self-reviewing fleet chains (v0.5 — review/fix/re-verify cycles between
+  self-reviewing fleet chains (v0.6 — review/fix/re-verify cycles between
   agents until merge-ready, owner merges).
+
+## Milestone v0.4 — Kelix for everyone (agent-agnostic, audacious, honest)
+
+Goal: reposition Kelix as **the loop that climbs, for any coding agent** —
+Kiro remains the deepest first-class integration, not the product identity.
+Voice everywhere: audacity backed by evidence, never hype without receipts.
+The `cmd` adapter contract stays: spawn CLI, pass prompt, read exit code +
+transcript — no per-agent SDKs or streaming parsers.
+
+Non-goals: no new runtime dependencies (stdlib-only core); no weakening of
+Kiro integration, security rails, or the verification gate; no benchmark
+numbers we did not run or cannot cite.
+
+Owner decisions captured in `.kelix/phases/*/CONTEXT.md` for this milestone.
+
+### Phase P-REPOS — Reposition (de-Kiro the identity, keep the integration)
+
+Outcome: README, docs/index.md, pyproject description, CLI help, and MCP
+server description lead with agent-agnostic framing; Kiro is "deepest
+integration," prominently linked; docs/kiro.md is untouched in depth.
+
+- REQ-R1: README.md first 20 lines do not lead with Kiro; new framing names
+  Claude Code, Codex CLI, Cursor, Gemini CLI, and Kiro (deepest integration).
+- REQ-R2: docs/index.md, pyproject.toml description/keywords, CLI help text
+  (including CONFIG_TEMPLATE comment), and mcp_server module description match
+  the agent-agnostic voice; Kiro linked as flagship integration.
+- REQ-R3: docs/kiro.md content and examples unchanged in capability; all
+  existing tests pass with no test edits required for this phase.
+
+### Phase P-AGENT — Named adapters + a guide per agent
+
+Outcome: named adapter presets resolve to the existing `cmd` adapter with
+verified or documented invocation templates; each preset has a comparable
+guide; `kelix init` wires first-run config with zero guesswork.
+
+- REQ-A1: presets `claude`, `codex`, `cursor`, `gemini` resolve to `cmd` with
+  the correct command template; `kiro`, `cmd`, `mock` behavior unchanged.
+- REQ-A2: docs/agents/{claude,codex,cursor,gemini}.md follow docs/kiro.md
+  heading parity for loop wiring (install, auth, kelix.toml, worked example,
+  quirks, troubleshooting); cursor guide labels Kelix-verified invocations;
+  others label upstream-sourced, community-feedback welcome.
+- REQ-A3: `kelix init` on TTY prompts with a numbered agent list; on non-TTY
+  requires `--agent <name>`; writes the matching `[agent]` block to kelix.toml.
+- REQ-A4: `kelix run` with adapter `claude` and a stub binary on PATH completes
+  one mock-style iteration in tests; each guide's TOML snippet parses via
+  `load_config`; CI exercises every guide TOML snippet (doctest-style).
+
+### Phase P-AUDIT — Audacity audit (every feature owns the claim)
+
+Outcome: feature docs and CLI surfaces answer "what does this let one person
+do that they couldn't before?" — one audacious sentence, then evidence.
+Sequencing: feature docs first, CLI strings second, README/index audacity
+pass last (after P-REPOS structural reposition).
+
+- REQ-U1: docs/proof/* renames Kalph residue to Kelix; docs/proof/final-report.md
+  gains a one-line provenance note at the top.
+- REQ-U2: each feature page (concept, memory-and-skills, prioritization,
+  planning, fleet, SECURITY, mcp, writing-for-the-loop) opens with a capability
+  claim followed by a link to proof (test, docs/proof artifact, or reproducible
+  command).
+- REQ-U3: CLI surfaces in cli.py use art.say() theming; run-complete message
+  states what was verified, not just "done."
+- REQ-U4: README.md and docs/index.md receive a final audacity pass (voice,
+  not structural reposition — that is REQ-R1/R2).
+
+### Phase P-COMPARE — Honest comparison page
+
+Outcome: docs/compare.md compares Kelix vs plain Ralph, vs single-agent CLIs,
+vs long-lived orchestrators on measurable axes only; weakness rows are explicit;
+every number cites a receipt or reads "not measured — no receipt."
+
+- REQ-C1: docs/compare.md exists with cited rows for axes where proof exists;
+  missing axes marked "not measured — no receipt"; at least two rows where
+  Kelix loses (single-iteration latency, IDE pairing affordances, adapter
+  hang/timeout wart per D13).
+- REQ-C2: compare.md linked from README and docs/index.md; zero uncited numbers.
+
+### Phase P-GOLD — First-contact spec gate (gold in, diamonds out)
+
+Outcome: the loop refuses to burn tokens on slop at first contact; owner can
+always bypass with `--force` (spec gate only, never git safety).
+
+- REQ-G1: `kelix run` on a backlog whose `status: ready` tasks fail lint stops
+  before iteration 1 with actionable output (good/bad example inline); well-
+  specified backlog proceeds; `--force` skips the spec gate only.
+- REQ-G2: `kelix plan` interview asks at least one acceptance-criteria question
+  per phase; rubric reuses docs/writing-for-the-loop rules.
+- REQ-G3: GOAL.md template and lint gate messages carry the canon tagline once:
+  "Gold in, diamonds out." (good/slop demoted to body examples in writing-for-the-loop).
