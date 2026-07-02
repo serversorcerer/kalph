@@ -1,10 +1,10 @@
 # Kelix state
 
 - milestone: v0.4
-- phase: P-AGENT
+- phase: P-AUDIT
 - current_task: selecting
-- last_task: KE15
-- last_verified_commit: fe4f31827e3e7ec50ca306948a398d683bf7fff1
-- done: 71
+- last_task: KE16
+- last_verified_commit: ca21b0408ced4740d96b925b7555fff540d0cb09
+- done: 72
 - total: 106
 - blockers:
