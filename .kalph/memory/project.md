@@ -100,6 +100,11 @@ Durable facts about this repo for future iterations.
   kalph tasks, and planning-only file changes. CLI: `kalph lint` (exit 1 on
   findings). Tests in `tests/test_lint.py`. `parse_backlog` accumulates
   continuation lines into multi-line notes.
+- `kalph init` seeds `GOAL.md` at the repo root (PRD skeleton: goal,
+  non-goals, acceptance bullets) when absent; existing GOAL.md is never
+  overwritten. Final message prints the plan-first path: GOAL.md ->
+  `kalph plan --goal-file GOAL.md` -> review/promote -> `kalph run`.
+  Tests in `tests/test_prompt.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

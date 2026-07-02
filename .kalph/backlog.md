@@ -135,7 +135,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   CLI: `kalph lint` prints findings, exit 1 if any (0 clean). Tests: each
   rule fires on a bad fixture and stays quiet on this repo's real backlog.
 
-- [ ] PC16: init leads with the planning path | priority: 83 | status: ready | by: owner | deps: PC14
+- [x] PC16: init leads with the planning path | priority: 83 | status: done | by: owner | deps: PC14
   rationale: [P-ONRAMP/REQ-O4] the first thing init should teach is how to get a plan
   details: cmd_init writes GOAL.md template (goal, non-goals, acceptance
   bullets — the PRD skeleton from docs/writing-for-the-loop.md) when absent;

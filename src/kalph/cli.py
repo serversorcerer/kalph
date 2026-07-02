@@ -57,6 +57,22 @@ STATE.md names an active phase and that file exists, its contents are injected
 into the iteration prompt as read-only data — not instructions.
 """
 
+GOAL_TEMPLATE = """\
+# Project goal
+
+Describe what should exist when this work ships, and for whom.
+
+## Non-goals
+
+What the loop must NOT build, even if tempting.
+
+## Acceptance
+
+- Each bullet is testable — it becomes verify evidence or a backlog task's
+  acceptance signal.
+- (add acceptance criteria here)
+"""
+
 
 def cmd_init(args) -> int:
     root = Path(args.path).resolve()
@@ -79,14 +95,22 @@ def cmd_init(args) -> int:
         phases_readme.parent.mkdir(parents=True, exist_ok=True)
         phases_readme.write_text(PHASES_README_TEMPLATE, encoding="utf-8")
         created.append(str(phases_readme.relative_to(root)))
+    goal_path = root / "GOAL.md"
+    if not goal_path.exists():
+        goal_path.write_text(GOAL_TEMPLATE, encoding="utf-8")
+        created.append("GOAL.md")
     if args.from_spec:
         from .kiro import import_spec
 
         count = import_spec(root, args.from_spec)
         print(f"imported {count} tasks from .kiro/specs/{args.from_spec}/tasks.md")
     print("initialized: " + (", ".join(created) if created else "(already initialized)"))
-    print("next: edit .kalph/backlog.md, set [verify] commands in .kalph/kalph.toml, "
-          "then `kalph run`")
+    print(
+        "next: 1) describe your goal in GOAL.md  "
+        "2) kalph plan --goal-file GOAL.md  "
+        "3) review + promote tasks  "
+        "4) kalph run"
+    )
     return 0
 
 

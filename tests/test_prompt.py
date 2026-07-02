@@ -144,3 +144,32 @@ def test_init_writes_phases_readme(tmp_path):
     text = readme.read_text(encoding="utf-8")
     assert "CONTEXT.md" in text
     assert "phase-id" in text
+
+
+def test_init_writes_goal_md(tmp_path):
+    from kalph.cli import GOAL_TEMPLATE, cmd_init
+
+    class Args:
+        path = str(tmp_path)
+        from_spec = ""
+
+    cmd_init(Args())
+    goal = tmp_path / "GOAL.md"
+    assert goal.is_file()
+    text = goal.read_text(encoding="utf-8")
+    assert text == GOAL_TEMPLATE
+    assert "## Non-goals" in text
+    assert "## Acceptance" in text
+
+
+def test_init_does_not_overwrite_existing_goal_md(tmp_path):
+    from kalph.cli import cmd_init
+
+    class Args:
+        path = str(tmp_path)
+        from_spec = ""
+
+    goal = tmp_path / "GOAL.md"
+    goal.write_text("custom goal\n", encoding="utf-8")
+    cmd_init(Args())
+    assert goal.read_text(encoding="utf-8") == "custom goal\n"
