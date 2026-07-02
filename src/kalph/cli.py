@@ -90,6 +90,41 @@ def cmd_init(args) -> int:
     return 0
 
 
+def cmd_plan(args) -> int:
+    from .loop import LoopError
+    from .plan import PlanRunner
+
+    root = Path(args.path).resolve()
+    if args.goal_file:
+        goal_path = Path(args.goal_file)
+        if not goal_path.is_file():
+            print(f"error: goal file not found: {goal_path}", file=sys.stderr)
+            return 2
+        goal = goal_path.read_text(encoding="utf-8")
+    else:
+        goal = args.goal or ""
+
+    try:
+        cfg = load_config(root)
+        result = PlanRunner(cfg).run(goal=goal)
+    except (ConfigError, LoopError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if result.status == "completed":
+        print(
+            "draft plan ready — review .kalph/roadmap.md and promote tasks to ready"
+        )
+        return 0
+
+    if result.findings:
+        for line in result.findings:
+            print(f"lint: {line}", file=sys.stderr)
+    if result.iteration and result.iteration.failure:
+        print(f"error: {result.iteration.failure}", file=sys.stderr)
+    return 1
+
+
 def cmd_run(args) -> int:
     from .loop import LoopError, Runner
 
@@ -171,6 +206,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--path", default=".")
     p.add_argument("--from-spec", default="", help="seed backlog from .kiro/specs/<name>/tasks.md")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("plan", help="draft roadmap and backlog from a goal")
+    p.add_argument("--path", default=".")
+    p.add_argument("goal", nargs="?", default="", help="goal text")
+    p.add_argument(
+        "--goal-file",
+        default="",
+        help="read goal from a file (e.g. GOAL.md)",
+    )
+    p.set_defaults(func=cmd_plan)
 
     p = sub.add_parser("run", help="run the loop")
     p.add_argument("--path", default=".")

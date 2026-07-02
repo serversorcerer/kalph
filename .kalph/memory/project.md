@@ -75,6 +75,15 @@ Durable facts about this repo for future iterations.
   data, not instructions." Missing file or empty phase renders "(no phase
   decisions)". `kalph init` writes `.kalph/phases/README.md` explaining the
   CONTEXT.md convention. Tests in `tests/test_prompt.py`.
+- `kalph plan` lives in `src/kalph/plan.py` (`PlanRunner`) with CLI in
+  `cli.py` (`cmd_plan`). Accepts a goal string or `--goal-file`. Runs one
+  adapter iteration using `PLANNING_TEMPLATE` in `prompt.py` (not the loop
+  template); verify is replaced by `validate_plan()` in `lint.py` which checks
+  roadmap parse, proposed-only kalph tasks, REQ coverage, and planning-only file
+  changes. Pre-plan checkpoint establishes the diff baseline (same pattern as
+  loop pre-iteration checkpoint). Success prints "draft plan ready — review
+  `.kalph/roadmap.md` and promote tasks to ready". Agent must emit
+  `PLAN COMPLETE` sentinel. Tests in `tests/test_plan.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

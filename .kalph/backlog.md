@@ -94,7 +94,7 @@ Every task below names its phase and the REQ it covers in `details:`.
 
 ### Phase P-ONRAMP (the owner's planning onramp)
 
-- [ ] PC14: kalph plan — goal to draft plan in one iteration | priority: 89 | status: ready | by: owner | deps: PC4
+- [x] PC14: kalph plan — goal to draft plan in one iteration | priority: 89 | status: done | by: owner | deps: PC4
   rationale: [P-ONRAMP/REQ-O1] the most important thing a user needs is a plan; give them a command, not just a doc
   details: add cmd_plan to src/kalph/cli.py and src/kalph/plan.py. Input: a
   goal string (`kalph plan "build X"`) or --goal-file. Runs exactly one
