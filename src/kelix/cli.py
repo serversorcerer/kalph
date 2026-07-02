@@ -1,4 +1,4 @@
-"""Kelix command-line interface."""
+"""Kelix command-line interface — run any headless coding agent in a verified loop."""
 
 from __future__ import annotations
 
@@ -30,11 +30,17 @@ architecture notes, conventions, build/test quirks, gotchas. Keep entries
 short; this file is injected into agent context by reference.
 """
 
+CLI_DESCRIPTION = (
+    "Run headless coding agents — Claude Code, Codex CLI, Cursor, Gemini CLI, "
+    "Kiro, or your own CLI adapter — in a verified loop. All state lives in "
+    "files and git; every iteration is a fresh agent, one task, verified-done."
+)
+
 CONFIG_TEMPLATE = """\
 # Kelix configuration. Every field is optional; defaults are safe.
 
 [agent]
-adapter = "kiro"          # kiro | cmd | mock
+adapter = "kiro"          # kiro | claude | codex | cursor | gemini | cmd | mock
 
 [loop]
 max_iterations = 25
@@ -519,12 +525,15 @@ def cmd_sync(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    from .art import TAGLINE, banner
+    from .art import banner
 
+    description = CLI_DESCRIPTION
+    if sys.stdout.isatty():
+        description = f"{CLI_DESCRIPTION}\n\n{banner()}"
     parser = argparse.ArgumentParser(
         prog="kelix",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=banner() if sys.stdout.isatty() else f"kelix — {TAGLINE}",
+        description=description,
         epilog=(
             "the flow: kelix init -> kelix plan (it interviews you) -> "
             "review -> kelix run\n"
@@ -553,7 +562,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.set_defaults(func=cmd_plan)
 
-    p = sub.add_parser("run", help="run the loop")
+    p = sub.add_parser(
+        "run",
+        help="run the verified loop with the configured coding agent",
+    )
     p.add_argument("--path", default=".")
     p.add_argument("--max-iterations", type=int, default=None)
     p.add_argument("--role", default="", help="role text to inject into the prompt")
@@ -583,7 +595,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-iterations", type=int, default=None)
     p.set_defaults(func=cmd_fleet)
 
-    p = sub.add_parser("mcp", help="serve Kelix as an MCP server (stdio)")
+    p = sub.add_parser(
+        "mcp",
+        help="serve Kelix as an MCP server for MCP-capable agents (stdio)",
+    )
     p.add_argument("--path", default=".")
     p.set_defaults(func=cmd_mcp)
 

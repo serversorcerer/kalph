@@ -541,7 +541,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   `rg -i 'rebuilt for kiro' pyproject.toml` returns no matches; `pip install -e .`
   metadata check via `python -c "import importlib.metadata as m; print(m.metadata('kelix')['Description'])"`.
 
-- [ ] KE4: CLI help + config template voice | priority: 89 | status: ready | by: owner | phase: P-REPOS | req: REQ-R2
+- [x] KE4: CLI help + config template voice | priority: 89 | status: done | by: owner | phase: P-REPOS | req: REQ-R2
   details: in src/kelix/cli.py update CONFIG_TEMPLATE adapter comment to list
   named presets (kiro | claude | codex | cursor | gemini | cmd | mock) and
   refresh argparse help strings / module docstrings that lead with Kiro-only
