@@ -83,6 +83,7 @@ class Runner:
         # None to signal there is no eligible work left for this agent.
         self.pre_iteration = pre_iteration
         self._run_state: State | None = None
+        self._phase_gate_lines: list[str] = []
 
     # -- setup ---------------------------------------------------------------
 
@@ -131,15 +132,71 @@ class Runner:
         existing = load_state(kelix_dir)
         return existing if existing is not None else State()
 
-    def _backlog_counts(self, workdir: Path) -> tuple[int, int]:
+    def _backlog_tasks(self, workdir: Path):
         from .backlog import parse_backlog
 
         backlog_path = workdir / self.cfg.loop.plan_file
         if not backlog_path.is_file():
-            return 0, 0
-        tasks = parse_backlog(backlog_path.read_text(encoding="utf-8"))
+            return []
+        return parse_backlog(backlog_path.read_text(encoding="utf-8"))
+
+    def _backlog_counts(self, workdir: Path) -> tuple[int, int]:
+        tasks = self._backlog_tasks(workdir)
         done = sum(1 for t in tasks if t.status == "done")
         return done, len(tasks)
+
+    def _active_phase_tasks_done(self, workdir: Path, phase_id: str) -> bool:
+        phase_tasks = [t for t in self._backlog_tasks(workdir) if t.phase == phase_id]
+        if not phase_tasks:
+            return False
+        return all(t.status == "done" for t in phase_tasks)
+
+    def _phase_gate_retrospective_lines(self, uncovered: list[str]) -> list[str]:
+        lines = ["", "## Phase gate", ""]
+        lines.extend(f"- {req_id}: uncovered" for req_id in uncovered)
+        return lines
+
+    def _apply_phase_gate(self, workdir: Path) -> None:
+        """Enforce REQ coverage for the active phase; mutate run state in place."""
+        if self._run_state is None or not self._run_state.phase:
+            return
+
+        from .roadmap import (
+            coverage,
+            load_roadmap,
+            next_phase,
+            phase_fully_covered,
+            uncovered_reqs,
+        )
+
+        roadmap = load_roadmap(workdir / ".kelix")
+        if roadmap is None:
+            return
+
+        entries = coverage(roadmap, self._backlog_tasks(workdir), self._run_state.phase)
+        if phase_fully_covered(entries):
+            self._run_state.blockers = []
+            following = next_phase(roadmap, self._run_state.phase)
+            if following:
+                self._run_state.phase = following
+                for phase in roadmap.phases:
+                    if phase.id == following and phase.milestone_id:
+                        self._run_state.milestone = phase.milestone_id
+                        break
+            self._phase_gate_lines = []
+            return
+
+        missing = uncovered_reqs(entries)
+        self._run_state.blockers = [f"{req_id}: uncovered" for req_id in missing]
+        self._phase_gate_lines = (
+            self._phase_gate_retrospective_lines(missing) if missing else []
+        )
+
+    def _maybe_apply_phase_gate(self, workdir: Path, *, at_run_end: bool) -> None:
+        if self._run_state is None or not self._run_state.phase:
+            return
+        if at_run_end or self._active_phase_tasks_done(workdir, self._run_state.phase):
+            self._apply_phase_gate(workdir)
 
     @staticmethod
     def _current_task_from_role(role_extra: str) -> str:
@@ -294,6 +351,8 @@ class Runner:
 
             self._update_run_state_after_iteration(current_task, rec, workdir)
             self._record_episode(rec, workdir)
+            if not rec.failure:
+                self._maybe_apply_phase_gate(workdir, at_run_end=False)
 
             failed = (
                 not agent.ok
@@ -375,11 +434,17 @@ class Runner:
         from .memory import write_retrospective
 
         workdir = Path(result.workdir) if result.workdir else self.cfg.root
+        self._maybe_apply_phase_gate(workdir, at_run_end=True)
         if self._run_state is not None:
             write_state(workdir / ".kelix", self._run_state)
 
         try:
-            write_retrospective(self.cfg, result, run_dir)
+            write_retrospective(
+                self.cfg,
+                result,
+                run_dir,
+                phase_gate_lines=self._phase_gate_lines or None,
+            )
         except Exception as exc:  # retrospective must never mask run status
             log(f"  (retrospective failed: {exc})")
         log(

@@ -199,4 +199,5 @@ def test_coverage_real_p_gate():
     by_req = {e.req_id: e.status for e in result if e.status != "warning"}
 
     assert set(by_req) == {"REQ-G1", "REQ-G2", "REQ-G3"}
-    assert all(by_req[req_id] == "in-progress" for req_id in by_req)
+    assert by_req["REQ-G1"] == "covered"
+    assert all(by_req[req_id] == "in-progress" for req_id in ("REQ-G2", "REQ-G3"))

@@ -169,3 +169,24 @@ def coverage(roadmap: Roadmap, tasks: list[Task], phase_id: str) -> list[Coverag
         entries.append(CoverageEntry(req_id=req.id, status=status))
 
     return entries + warnings
+
+
+def next_phase(roadmap: Roadmap, phase_id: str) -> str | None:
+    """Return the phase id after *phase_id* in roadmap order, or None."""
+    for index, phase in enumerate(roadmap.phases):
+        if phase.id == phase_id and index + 1 < len(roadmap.phases):
+            return roadmap.phases[index + 1].id
+    return None
+
+
+def phase_fully_covered(entries: list[CoverageEntry]) -> bool:
+    """True when every phase REQ is covered (warnings ignored)."""
+    req_entries = [entry for entry in entries if entry.status != "warning"]
+    if not req_entries:
+        return True
+    return all(entry.status == "covered" for entry in req_entries)
+
+
+def uncovered_reqs(entries: list[CoverageEntry]) -> list[str]:
+    """REQ-IDs with uncovered status for the active phase."""
+    return [entry.req_id for entry in entries if entry.status == "uncovered"]

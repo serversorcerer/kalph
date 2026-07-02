@@ -9,7 +9,7 @@ from conftest import write_mock_script
 
 from kelix.config import load_config
 from kelix.loop import Runner
-from kelix.state import load_state
+from kelix.state import State, load_state, write_state
 
 
 def _config(repo, extra="", mock_dir="mockdir", isolation="none"):
@@ -254,3 +254,103 @@ def test_state_md_records_verified_commit(repo):
             break
     assert task_sha is not None
     assert state.last_verified_commit == task_sha
+
+
+ROADMAP_TWO_PHASES = """\
+## Milestone v1 — test
+
+### Phase P-A — first
+
+Outcome: first phase.
+
+- REQ-A1: alpha requirement
+
+### Phase P-B — second
+
+Outcome: second phase.
+
+- REQ-B1: beta requirement
+"""
+
+
+def _write_roadmap(repo, text=ROADMAP_TWO_PHASES):
+    (repo / ".kelix" / "roadmap.md").write_text(text, encoding="utf-8")
+
+
+def _write_state(repo, *, phase="P-A", milestone="v1"):
+    write_state(
+        repo / ".kelix",
+        State(milestone=milestone, phase=phase, current_task="selecting"),
+    )
+
+
+def _write_backlog(repo, body: str):
+    (repo / ".kelix" / "backlog.md").write_text(f"# Backlog\n\n{body}", encoding="utf-8")
+
+
+def test_phase_gate_advances_when_covered(repo):
+    _write_roadmap(repo)
+    _write_state(repo, phase="P-A")
+    _write_backlog(
+        repo,
+        "- [x] T1: finish alpha | priority: 50 | status: done | by: owner | "
+        "phase: P-A | req: REQ-A1\n"
+        "- [ ] T2: beta work | priority: 49 | status: ready | by: owner | "
+        "phase: P-B | req: REQ-B1\n",
+    )
+    write_mock_script(
+        repo / "mockdir",
+        "001.sh",
+        'echo "RATIONALE: T2 — next phase task"\necho "KELIX COMPLETE"\n',
+    )
+    cfg = _config(repo)
+    result = Runner(cfg).run(max_iterations=1, log=lambda *_: None)
+    state = load_state(cfg.kelix_dir)
+    retrospective = (cfg.kelix_dir / "runs" / result.run_id / "retrospective.md").read_text()
+
+    assert state is not None
+    assert state.phase == "P-B"
+    assert state.blockers == []
+    assert "## Phase gate" not in retrospective
+
+
+def test_phase_gate_blocks_and_reports_uncovered(repo):
+    _write_roadmap(repo)
+    _write_state(repo, phase="P-A")
+    _write_backlog(
+        repo,
+        "- [ ] T0: unrelated work | priority: 50 | status: ready | by: owner\n",
+    )
+    write_mock_script(
+        repo / "mockdir",
+        "001.sh",
+        'echo "RATIONALE: T0 — unrelated work"\necho work > work.txt\n'
+        "git add -A && git commit -q -m 'T0: partial'\n",
+    )
+    cfg = _config(repo)
+    result = Runner(cfg).run(max_iterations=1, log=lambda *_: None)
+    state = load_state(cfg.kelix_dir)
+    retrospective = (cfg.kelix_dir / "runs" / result.run_id / "retrospective.md").read_text()
+
+    assert state is not None
+    assert state.phase == "P-A"
+    assert state.blockers == ["REQ-A1: uncovered"]
+    assert "## Phase gate" in retrospective
+    assert "- REQ-A1: uncovered" in retrospective
+
+
+def test_phase_gate_noop_without_roadmap(repo):
+    _write_state(repo, phase="P-A")
+    write_mock_script(
+        repo / "mockdir",
+        "001.sh",
+        COMMIT_TASK + 'echo "KELIX COMPLETE"\n',
+    )
+    cfg = _config(repo)
+    result = Runner(cfg).run(log=lambda *_: None)
+    state = load_state(cfg.kelix_dir)
+
+    assert state is not None
+    assert state.phase == "P-A"
+    retrospective = (cfg.kelix_dir / "runs" / result.run_id / "retrospective.md").read_text()
+    assert "## Phase gate" not in retrospective

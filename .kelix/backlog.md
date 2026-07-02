@@ -154,7 +154,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   Pure function, no I/O. tests/test_roadmap.py: all three states, unknown
   REQ on a task reported as a warning entry.
 
-- [ ] PC8: runner enforces the gate at phase boundaries | priority: 80 | status: ready | by: owner | deps: PC7, PC2 | phase: P-GATE | req: REQ-G2
+- [x] PC8: runner enforces the gate at phase boundaries | priority: 80 | status: done | by: owner | deps: PC7, PC2 | phase: P-GATE | req: REQ-G2
   rationale: [P-GATE/REQ-G2] the runner, not the agent, decides a phase is closed — same rule as verified-done
   details: at run end (and when all active-phase tasks are done mid-run),
   Runner computes coverage for the active phase: if fully covered, advance
