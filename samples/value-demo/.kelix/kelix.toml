@@ -1,0 +1,15 @@
+# Value demo — mock adapter for reproducible cold runs (see run-demo.sh).
+
+[agent]
+adapter = "mock"
+mock_dir = "mockdir"
+
+[loop]
+max_iterations = 10
+circuit_breaker_threshold = 3
+
+[verify]
+commands = ["pytest -q"]
+
+[git]
+isolation = "worktree"

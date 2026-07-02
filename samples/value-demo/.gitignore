@@ -1,0 +1,5 @@
+__pycache__/
+.pytest_cache/
+.kelix/runs/
+.kelix/worktrees/
+.kelix/STOP

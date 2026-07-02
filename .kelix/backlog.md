@@ -857,7 +857,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
 
 ### Phase V-PROOF — Value demo release gate
 
-- [ ] KV15: value-demo sample repo scaffold | priority: 41 | status: ready | by: owner | deps: KV14 | phase: V-PROOF | req: REQ-VP1
+- [x] KV15: value-demo sample repo scaffold | priority: 41 | status: done | by: owner | deps: KV14 | phase: V-PROOF | req: REQ-VP1
   details: create samples/value-demo/ — stdlib-only toy project (e.g. tiny
   calculator or todo module) with GOAL.md, .kelix/kelix.toml ([verify] =
   pytest -q), and a backlog of 3–5 owner-ready tasks sized for one iteration
