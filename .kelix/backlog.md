@@ -549,7 +549,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   CONFIG_TEMPLATE comment lists presets (may precede KE5 implementation — comment
   documents intent).
 
-- [ ] KE5: MCP server description reposition | priority: 88 | status: ready | by: owner | phase: P-REPOS | req: REQ-R2
+- [x] KE5: MCP server description reposition | priority: 88 | status: done | by: owner | phase: P-REPOS | req: REQ-R2
   details: rewrite src/kelix/mcp_server.py module docstring and any tool
   descriptions that say "Kiro first" to "MCP-capable agents; Kiro is the
   reference integration" without removing Kiro registration example. Acceptance:
