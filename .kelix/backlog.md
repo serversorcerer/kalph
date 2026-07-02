@@ -635,7 +635,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   Acceptance: first paragraph contains capability claim; second paragraph or
   bullet links proof artifact.
 
-- [ ] KE18: memory-and-skills audacity intro | priority: 75 | status: ready | by: owner | deps: KE16 | phase: P-AUDIT | req: REQ-U2
+- [x] KE18: memory-and-skills audacity intro | priority: 75 | status: done | by: owner | deps: KE16 | phase: P-AUDIT | req: REQ-U2
   details: same pattern for docs/memory-and-skills.md; proof link to dogfood
   retrospective or tests/test_memory.py reproducible command in doc.
 
