@@ -52,8 +52,8 @@ PROPOSE_BLOCKED_PATHS: tuple[str, ...] = (
 PROPOSE_SECURITY_EDITABLE = "DEFAULT_DENY denylist patterns only"
 # config.py: dataclass field defaults (LoopConfig, MemoryConfig, etc.).
 PROPOSE_CONFIG_EDITABLE = "dataclass field defaults in config.py only"
-# kelix.toml template: [memory] and [loop] documented keys only (see cli.CONFIG_TEMPLATE).
-PROPOSE_KELIX_TOML_EDITABLE = "[memory] and [loop] template keys only"
+# kelix.toml template: [loop] keys shown in init template (see cli.render_config_template).
+PROPOSE_KELIX_TOML_EDITABLE = "[loop] template keys only"
 
 
 class ProposeError(Exception):

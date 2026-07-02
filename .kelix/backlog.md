@@ -831,7 +831,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   section. Test: `kelix --help` lists init, plan, run; scrapped subcommands
   absent; pytest -q pass.
 
-- [ ] KV12: trim kelix.toml template to one screen | priority: 44 | status: ready | by: owner | deps: KV11 | phase: V-SIMPLE | req: REQ-VM2
+- [x] KV12: trim kelix.toml template to one screen | priority: 44 | status: done | by: owner | deps: KV11 | phase: V-SIMPLE | req: REQ-VM2
   details: CONFIG_TEMPLATE in cli.py ≤ 25 lines including comments. Remove or
   default keys unused in docs/proof runs, test fixtures, and samples/value-demo/.
   Keys removed from template must still parse via config.py defaults. Test:

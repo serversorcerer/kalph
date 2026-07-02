@@ -41,30 +41,23 @@ CLI_DESCRIPTION = (
 def render_config_template(adapter: str = "kiro") -> str:
     if adapter not in INIT_AGENTS:
         raise ValueError(f"unknown adapter {adapter!r}")
-    cmd_line = ""
+    agent_block = f'adapter = "{adapter}"  # kiro | claude | codex | cursor | gemini | cmd | mock\n'
     if adapter == "cmd":
-        cmd_line = 'command = "your-cli {prompt}"  # required when adapter = cmd\n'
+        agent_block += 'command = "your-cli {prompt}"  # required when adapter = cmd\n'
     return f"""\
-# Kelix configuration. Every field is optional; defaults are safe.
+# Kelix — optional fields; safe defaults apply.
 
 [agent]
-adapter = "{adapter}"          # kiro | claude | codex | cursor | gemini | cmd | mock
-{cmd_line}\
+{agent_block}\
 [loop]
 max_iterations = 25
 circuit_breaker_threshold = 3
-# diagnose_transcript_chars = 50000   # kelix diagnose transcript budget
-# diagnose_default_runs = 3             # kelix diagnose --last N default
 
 [verify]
-# Commands that define "done". All must exit 0.
-commands = []
+commands = []  # all must exit 0 for verified-done
 
 [git]
-isolation = "worktree"    # worktree | branch | none
-
-# [memory]
-# distill_skills = true     # post-retrospective skill distillation pass
+isolation = "worktree"
 """
 
 

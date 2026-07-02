@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tomllib
 
-from kelix.cli import cmd_init, render_config_template
+from kelix.cli import INIT_AGENTS, cmd_init, render_config_template
 from kelix.config import load_config
 
 
@@ -12,6 +12,30 @@ class InitArgs:
     path = "."
     from_spec = ""
     agent = ""
+
+
+def test_config_template_at_most_25_lines():
+    for agent in INIT_AGENTS:
+        line_count = len(render_config_template(agent).splitlines())
+        assert line_count <= 25, f"{agent} template has {line_count} lines"
+
+
+def test_init_template_loads_via_load_config(tmp_path):
+    args = InitArgs()
+    args.path = str(tmp_path)
+    args.agent = "kiro"
+
+    assert cmd_init(args, is_tty=False) == 0
+
+    cfg = load_config(tmp_path)
+    assert cfg.agent.adapter == "kiro"
+    assert cfg.loop.max_iterations == 25
+    assert cfg.loop.circuit_breaker_threshold == 3
+    assert cfg.verify.commands == []
+    assert cfg.git.isolation == "worktree"
+    # Keys removed from the template still parse via config.py defaults.
+    assert cfg.loop.diagnose_default_runs == 3
+    assert cfg.memory.distill_skills is True
 
 
 def test_render_config_template_named_preset():
