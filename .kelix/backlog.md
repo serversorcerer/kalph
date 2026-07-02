@@ -386,7 +386,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 
 ### Phase T-PROPOSE — reviewable tuning PRs
 
-- [ ] ST11: propose path allowlist guard | priority: 47 | status: ready | by: owner | deps: ST4 | phase: T-PROPOSE | req: REQ-TP1
+- [x] ST11: propose path allowlist guard | priority: 47 | status: done | by: owner | deps: ST4 | phase: T-PROPOSE | req: REQ-TP1
   details: add src/kelix/propose.py with PROPOSE_ALLOWED_PREFIXES tuple:
   .kelix/prompts/, src/kelix/security.py (denylist constants only — document
   which lines), src/kelix/config.py (defaults + CONFIG_TEMPLATE string),
