@@ -105,6 +105,19 @@ Durable facts about this repo for future iterations.
   overwritten. Final message prints the plan-first path: GOAL.md ->
   `kelix plan --goal-file GOAL.md` -> review/promote -> `kelix run`.
   Tests in `tests/test_prompt.py`.
+- Phase gate REQ coverage lives in `src/kelix/roadmap.py` (`CoverageEntry`,
+  `coverage(roadmap, tasks, phase_id)`, `next_phase`, `phase_fully_covered`,
+  `uncovered_reqs`). Per phase REQ: `covered` (done task references it),
+  `in-progress` (non-done task), `uncovered` (no task). Tasks with unknown
+  REQ-IDs get `warning` entries. Comma-separated `req:` on tasks matches
+  lint.py. Tests in `tests/test_roadmap.py`.
+- Phase gate enforcement lives in `src/kelix/loop.py` (`Runner._apply_phase_gate`,
+  `_maybe_apply_phase_gate`). Runs when all active-phase backlog tasks are done
+  mid-run and again at run end; no-op without roadmap or active phase. Fully
+  covered phases advance `STATE.md` phase (and milestone) via `next_phase`,
+  clearing blockers; otherwise uncovered REQ-IDs land in blockers and the run
+  retrospective gets a `## Phase gate` section (only when uncovered REQs exist).
+  Tests in `tests/test_loop.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to
@@ -132,3 +145,6 @@ Durable facts about this repo for future iterations.
 
 ## Run 20260702-022639 (max_iterations)
 10 iterations, 10 verified. Clean run.
+
+## Run 20260702-103424 (circuit_breaker)
+2 iterations, 0 verified. Failures: verification failed; verification failed.

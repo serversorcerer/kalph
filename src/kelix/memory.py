@@ -141,7 +141,13 @@ def skills_digest(cfg: Config, workdir: Path | None = None) -> str:
 
 # --- retrospectives -----------------------------------------------------------
 
-def write_retrospective(cfg: Config, result: RunResult, run_dir: Path) -> None:
+def write_retrospective(
+    cfg: Config,
+    result: RunResult,
+    run_dir: Path,
+    *,
+    phase_gate_lines: list[str] | None = None,
+) -> None:
     total = len(result.iterations)
     verified = sum(1 for r in result.iterations if r.verified)
     failures = [r for r in result.iterations if r.failure]
@@ -164,6 +170,8 @@ def write_retrospective(cfg: Config, result: RunResult, run_dir: Path) -> None:
         lines += [
             f"- iteration {r.index} needs attention: {r.failure}" for r in failures
         ]
+    if phase_gate_lines:
+        lines.extend(phase_gate_lines)
     (run_dir / "retrospective.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     # Update project memory on the run branch so the summary ships in the PR.

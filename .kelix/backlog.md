@@ -146,7 +146,7 @@ Every task below names its phase and the REQ it covers in `details:`.
 
 ### Phase P-GATE (coverage-gated done)
 
-- [ ] PC7: phase gate — REQ coverage computation | priority: 82 | status: ready | by: owner | deps: PC5 | phase: P-GATE | req: REQ-G1
+- [x] PC7: phase gate — REQ coverage computation | priority: 82 | status: done | by: owner | deps: PC5 | phase: P-GATE | req: REQ-G1
   rationale: [P-GATE/REQ-G1] a phase is done when what was decided is built and verified, not when errors stop
   details: in src/kelix/roadmap.py add coverage(roadmap, tasks, phase_id) ->
   list of (req_id, status) where status is covered (some task with req=REQ
@@ -154,7 +154,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   Pure function, no I/O. tests/test_roadmap.py: all three states, unknown
   REQ on a task reported as a warning entry.
 
-- [ ] PC8: runner enforces the gate at phase boundaries | priority: 80 | status: ready | by: owner | deps: PC7, PC2 | phase: P-GATE | req: REQ-G2
+- [x] PC8: runner enforces the gate at phase boundaries | priority: 80 | status: done | by: owner | deps: PC7, PC2 | phase: P-GATE | req: REQ-G2
   rationale: [P-GATE/REQ-G2] the runner, not the agent, decides a phase is closed — same rule as verified-done
   details: at run end (and when all active-phase tasks are done mid-run),
   Runner computes coverage for the active phase: if fully covered, advance
