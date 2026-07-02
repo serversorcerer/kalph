@@ -15,11 +15,13 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .backlog import parse_backlog, select_next
+from .backlog import Task, parse_backlog, select_next
 from .claims import claim_task, list_claims, mark_claim_done
 from .config import Config
 from .gitutil import git
 from .loop import Runner, RunResult
+from .roadmap import coverage, load_roadmap
+from .state import load_state
 
 BUILTIN_ROLES: dict[str, str] = {
     "builder": (
@@ -227,9 +229,72 @@ def _write_fleet_retrospective(
     print(f"fleet retrospective: {path}")
 
 
+def _tasks_for_req(req_id: str, tasks: list[Task]) -> list[Task]:
+    return [
+        task
+        for task in tasks
+        if req_id in [part.strip() for part in task.req.split(",") if part.strip()]
+    ]
+
+
+def _covering_task_id(tasks_for_req: list[Task]) -> str:
+    done = [task for task in tasks_for_req if task.status == "done"]
+    if done:
+        return done[0].id
+    if tasks_for_req:
+        return tasks_for_req[0].id
+    return "-"
+
+
+def _phase_gate_status_lines(cfg: Config) -> list[str]:
+    roadmap = load_roadmap(cfg.kelix_dir)
+    if roadmap is None:
+        return []
+
+    state = load_state(cfg.kelix_dir)
+    if state is None or not state.phase:
+        return []
+
+    phase = next((p for p in roadmap.phases if p.id == state.phase), None)
+    phase_label = f"{state.phase} — {phase.title}" if phase else state.phase
+
+    lines = [""]
+    if state.milestone:
+        lines.append(f"Milestone: {state.milestone}")
+    lines.append(f"Phase: {phase_label}")
+
+    backlog_path = cfg.root / cfg.loop.plan_file
+    tasks: list[Task] = []
+    if backlog_path.is_file():
+        tasks = parse_backlog(backlog_path.read_text(encoding="utf-8"))
+
+    entries = coverage(roadmap, tasks, state.phase)
+    req_entries = [entry for entry in entries if entry.status != "warning"]
+    if req_entries:
+        lines.append("")
+        lines.append("Phase gate coverage:")
+        lines.append(f"  {'REQ-ID':<10} {'status':<12} task")
+        for entry in req_entries:
+            task_id = _covering_task_id(_tasks_for_req(entry.req_id, tasks))
+            lines.append(f"  {entry.req_id:<10} {entry.status:<12} {task_id}")
+
+    warnings = [entry for entry in entries if entry.status == "warning"]
+    for entry in warnings:
+        lines.append(f"  warning: {entry.message}")
+
+    if state.blockers:
+        lines.append("")
+        lines.append("Blockers:")
+        for blocker in state.blockers:
+            lines.append(f"  - {blocker}")
+
+    return lines
+
+
 def render_status(cfg: Config) -> str:
     """Live view assembled purely from coordination files + git."""
     lines = ["kelix status", "============"]
+    lines.extend(_phase_gate_status_lines(cfg))
     stop = cfg.kelix_dir / "STOP"
     if stop.exists():
         lines.append("KILL SWITCH SET (.kelix/STOP) — runs will halt")

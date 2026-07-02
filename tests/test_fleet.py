@@ -171,5 +171,63 @@ def test_render_status_reads_coordination_files(tmp_path):
     make_claim_hook(cfg, spec, "agent-a")(repo, 1)
     out = render_status(cfg)
     assert "FT1" in out and "agent-a" in out
+    assert "Phase gate coverage" not in out
     (cfg.kelix_dir / "STOP").write_text("halt")
     assert "KILL SWITCH" in render_status(cfg)
+
+
+GATE_ROADMAP = """\
+# Roadmap
+
+## Milestone m1 — Demo
+
+### Phase P-GATE — gate phase
+
+Outcome: gate it.
+
+- REQ-G1: first req
+- REQ-G2: second req
+- REQ-G3: third req
+"""
+
+GATE_BACKLOG = """\
+# Backlog
+
+- [x] T1: first | priority: 90 | status: done | by: owner | phase: P-GATE | req: REQ-G1
+- [x] T2: second | priority: 80 | status: done | by: owner | phase: P-GATE | req: REQ-G2
+- [ ] T3: third | priority: 70 | status: ready | by: owner | phase: P-GATE | req: REQ-G3
+"""
+
+GATE_STATE = """\
+# Kelix state
+
+- milestone: m1 — Demo
+- phase: P-GATE
+- current_task: selecting
+- last_task: T2
+- last_verified_commit: abc123
+- done: 2
+- total: 3
+- blockers:
+  - REQ-G3
+"""
+
+
+def test_render_status_phase_gate_coverage(tmp_path):
+    repo = make_repo(tmp_path / "repo")
+    kelix = repo / ".kelix"
+    kelix.mkdir(parents=True, exist_ok=True)
+    (kelix / "roadmap.md").write_text(GATE_ROADMAP)
+    (kelix / "backlog.md").write_text(GATE_BACKLOG)
+    (kelix / "STATE.md").write_text(GATE_STATE)
+    (repo / "kelix.toml").write_text("[agent]\nadapter = \"mock\"\n")
+    cfg = load_config(repo)
+    out = render_status(cfg)
+    assert "Milestone: m1 — Demo" in out
+    assert "Phase: P-GATE — gate phase" in out
+    assert "Phase gate coverage:" in out
+    assert "REQ-G1     covered      T1" in out
+    assert "REQ-G2     covered      T2" in out
+    assert "REQ-G3     in-progress  T3" in out
+    assert "Blockers:" in out
+    assert "REQ-G3" in out.split("Blockers:")[1]

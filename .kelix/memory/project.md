@@ -118,6 +118,11 @@ Durable facts about this repo for future iterations.
   clearing blockers; otherwise uncovered REQ-IDs land in blockers and the run
   retrospective gets a `## Phase gate` section (only when uncovered REQs exist).
   Tests in `tests/test_loop.py`.
+- `kelix status` phase gate (`src/kelix/fleet.py` `render_status`): when
+  `.kelix/roadmap.md` and STATE.md with an active phase exist, prints milestone,
+  phase title, REQ coverage table (id, status, covering task id), and blockers;
+  repos without a roadmap keep the prior claims/runs/mailbox output only.
+  Tests in `tests/test_fleet.py`.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

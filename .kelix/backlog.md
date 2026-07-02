@@ -164,7 +164,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   REQ. Never advance past an uncovered phase. Tests: covered -> advance,
   uncovered -> stay + retrospective section, no roadmap -> no-op.
 
-- [ ] PC9: kelix status renders the phase gate | priority: 78 | status: ready | by: owner | deps: PC7 | phase: P-GATE | req: REQ-G3
+- [x] PC9: kelix status renders the phase gate | priority: 78 | status: done | by: owner | deps: PC7 | phase: P-GATE | req: REQ-G3
   rationale: [P-GATE/REQ-G3] the owner steers from a one-screen view assembled from files alone
   details: extend render_status in src/kelix/fleet.py: when a roadmap
   exists, print active milestone/phase from STATE.md and a coverage table
