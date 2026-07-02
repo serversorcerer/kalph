@@ -4,7 +4,7 @@
 - phase: P-COMPARE
 - current_task: selecting
 - last_task: KE28
-- last_verified_commit: pending
+- last_verified_commit: 355885d
 - done: 84
 - total: 106
 - blockers:
