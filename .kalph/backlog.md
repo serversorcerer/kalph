@@ -82,7 +82,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   existing owner/status/priority key). tests/test_backlog.py: round-trip,
   legacy lines, phase-preference selection.
 
-- [ ] PC6: per-phase CONTEXT.md decisions injected | priority: 86 | status: ready | by: owner | deps: PC3, PC4
+- [x] PC6: per-phase CONTEXT.md decisions injected | priority: 86 | status: done | by: owner | deps: PC3, PC4
   rationale: [P-INTENT/REQ-I2] decisions made once should not be re-guessed by every iteration (GSD Discuss)
   details: when STATE.md names an active phase and
   .kalph/phases/<phase-id>/CONTEXT.md exists, inject it as a budgeted

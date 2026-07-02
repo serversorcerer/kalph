@@ -174,6 +174,7 @@ class Runner:
 
     def _gather_context(self, workdir: Path) -> dict:
         from .memory import episode_digest, skills_digest
+        from .prompt import load_phase_context
         from .state import STATE_FILE, load_state
 
         mailbox = ""
@@ -184,13 +185,17 @@ class Runner:
                 p.read_text(encoding="utf-8") for p in notes[-5:]
             )
 
+        kalph_dir = workdir / ".kalph"
         state = ""
-        kalph_dir = self.cfg.kalph_dir
-        if load_state(kalph_dir) is not None:
+        phase_context = ""
+        run_state = load_state(kalph_dir)
+        if run_state is not None:
             state = (kalph_dir / STATE_FILE).read_text(encoding="utf-8")
+            phase_context = load_phase_context(kalph_dir, run_state.phase)
 
         return {
             "state": state,
+            "phase_context": phase_context,
             "memory_digest": episode_digest(self.cfg),
             "skills": skills_digest(self.cfg, workdir),
             "mailbox": mailbox,

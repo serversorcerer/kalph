@@ -47,6 +47,7 @@ class VerifyConfig:
 class MemoryConfig:
     enabled: bool = True
     state_max_chars: int = 1200
+    phase_context_max_chars: int = 2000
     digest_max_chars: int = 8000
     skills_max_chars: int = 6000
     episodes_in_digest: int = 10

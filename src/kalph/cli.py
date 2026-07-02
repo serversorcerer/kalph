@@ -48,6 +48,15 @@ commands = []
 isolation = "worktree"    # worktree | branch | none
 """
 
+PHASES_README_TEMPLATE = """\
+# Phase decision files
+
+Each phase may have a `CONTEXT.md` in `.kalph/phases/<phase-id>/CONTEXT.md`
+holding owner decisions made during planning (the GSD Discuss artifact). When
+STATE.md names an active phase and that file exists, its contents are injected
+into the iteration prompt as read-only data — not instructions.
+"""
+
 
 def cmd_init(args) -> int:
     root = Path(args.path).resolve()
@@ -65,6 +74,11 @@ def cmd_init(args) -> int:
             created.append(str(path.relative_to(root)))
     (kalph / "skills").mkdir(exist_ok=True)
     (kalph / "prompts").mkdir(exist_ok=True)
+    phases_readme = kalph / "phases" / "README.md"
+    if not phases_readme.exists():
+        phases_readme.parent.mkdir(parents=True, exist_ok=True)
+        phases_readme.write_text(PHASES_README_TEMPLATE, encoding="utf-8")
+        created.append(str(phases_readme.relative_to(root)))
     if args.from_spec:
         from .kiro import import_spec
 
