@@ -655,7 +655,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   details: same pattern for docs/SECURITY.md; proof link to
   tests/test_injection_drill.py or docs/proof/injection-drill-backlog.diff.
 
-- [ ] KE23: mcp audacity intro | priority: 70 | status: ready | by: owner | deps: KE16 | phase: P-AUDIT | req: REQ-U2
+- [x] KE23: mcp audacity intro | priority: 70 | status: done | by: owner | deps: KE16 | phase: P-AUDIT | req: REQ-U2
   details: same pattern for docs/mcp.md; proof link to tests/test_mcp_server.py.
 
 - [ ] KE24: writing-for-the-loop tagline | priority: 69 | status: ready | by: owner | phase: P-AUDIT | req: REQ-U2
