@@ -1,0 +1,71 @@
+import pytest
+
+from kalph.config import Config, ConfigError, load_config
+
+
+def test_defaults_when_no_file(tmp_path):
+    cfg = load_config(tmp_path)
+    assert cfg.agent.adapter == "kiro"
+    assert cfg.loop.max_iterations == 25
+    assert cfg.loop.circuit_breaker_threshold == 3
+    assert cfg.git.isolation == "worktree"
+    assert cfg.autonomy.level == "normal"
+    assert cfg.security.scrub_transcripts is True
+    assert cfg.kalph_dir == tmp_path.resolve() / ".kalph"
+
+
+def test_loads_from_kalph_dir(tmp_path):
+    (tmp_path / ".kalph").mkdir()
+    (tmp_path / ".kalph" / "kalph.toml").write_text(
+        """
+[agent]
+adapter = "mock"
+mock_dir = "fixtures/mock"
+
+[loop]
+max_iterations = 5
+
+[verify]
+commands = ["pytest -q"]
+"""
+    )
+    cfg = load_config(tmp_path)
+    assert cfg.agent.adapter == "mock"
+    assert cfg.loop.max_iterations == 5
+    assert cfg.verify.commands == ["pytest -q"]
+
+
+def test_root_kalph_toml_is_fallback(tmp_path):
+    (tmp_path / "kalph.toml").write_text('[loop]\nmax_iterations = 2\n')
+    assert load_config(tmp_path).loop.max_iterations == 2
+
+
+def test_unknown_key_rejected(tmp_path):
+    (tmp_path / "kalph.toml").write_text('[loop]\nmax_iters = 2\n')
+    with pytest.raises(ConfigError, match="unknown key"):
+        load_config(tmp_path)
+
+
+def test_wrong_type_rejected(tmp_path):
+    (tmp_path / "kalph.toml").write_text('[loop]\nmax_iterations = "lots"\n')
+    with pytest.raises(ConfigError, match="must be int"):
+        load_config(tmp_path)
+
+
+def test_cmd_adapter_requires_command(tmp_path):
+    (tmp_path / "kalph.toml").write_text('[agent]\nadapter = "cmd"\n')
+    with pytest.raises(ConfigError, match="command is required"):
+        load_config(tmp_path)
+
+
+def test_bad_adapter_rejected(tmp_path):
+    (tmp_path / "kalph.toml").write_text('[agent]\nadapter = "gpt"\n')
+    with pytest.raises(ConfigError, match="unknown agent adapter"):
+        load_config(tmp_path)
+
+
+def test_default_config_is_safe():
+    cfg = Config()
+    assert cfg.loop.max_iterations <= 25
+    assert cfg.git.isolation == "worktree"
+    assert cfg.tracker.provider == ""
