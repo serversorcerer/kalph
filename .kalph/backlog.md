@@ -41,7 +41,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   branch, assert push before gh, assert no --force anywhere, assert body contains
   verification evidence, assert None (not exception) when gh fails.
 
-- [ ] KB7: fleet claim files | priority: 82 | status: ready | by: owner | deps: KB1
+- [x] KB7: fleet claim files | priority: 82 | status: done | by: owner | deps: KB1
   rationale: two fleet agents must never work the same task; claims are the mechanism
   details: create src/kalph/claims.py managing .kalph/fleet/claims/<task-id>.json.
   Functions: claim_task(kalph_dir, task_id, agent_id, branch) -> bool using

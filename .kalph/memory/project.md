@@ -37,6 +37,11 @@ Durable facts about this repo for future iterations.
   `kalph run --pr` opens a GitHub PR after `completed` or `max_iterations` runs;
   refuses main/master/empty branches, pushes with `git push -u origin <branch>`,
   never `--force`. Returns None (log-and-skip) on any subprocess failure.
+- Fleet claims live in `src/kalph/claims.py` (`.kalph/fleet/claims/<task-id>.json`).
+  `claim_task` uses `O_CREAT|O_EXCL` for new claims; stale claims (heartbeat older
+  than `stale_after_s`, default 900s) are reclaimable via temp-file + `os.replace`.
+  Tests in `tests/test_claims.py` cover concurrent winners, stale reclaim, release,
+  and wrong-agent guardrails.
 
 ## Run 20260702-002215 (completed)
 4 iterations, 4 verified. Clean run.
