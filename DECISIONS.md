@@ -215,3 +215,14 @@ the bottom. Format: `D<N> (<phase>): decision — rationale`.
   activity clock only ticked per full 4KB buffer). Built directly by the
   owner-side assistant for immediate use on the next runs; recorded here
   per the bootstrap-intervention rule.
+- D24 (Milestone V — value-cut ship gate, REQ-VP3): KV1–KV18 complete.
+  **Value demo:** run `20260702-184413` on `samples/value-demo/` (mock
+  adapter, 5/5 verified, 3.73 s wall clock); full receipt in
+  `docs/proof/value-demo.md` (transcript, verify exit 0, five commit SHAs on
+  branch `kelix/run-20260702-184413`). **Ledger final verdicts** (16 rows in
+  `docs/value-ledger.md`): 7 SHARPEN, 7 KEEP, 2 SCRAP — SCRAP rows executed
+  (`sync/` deleted KV2, `pr.py`/`--pr` deleted KV3); mcp_server and skills
+  stayed KEEP per row-by-row judgment. **Release gate:** README first screen
+  carries the value sentence and links the demo receipt (KV17); `kelix lint`,
+  `pytest -q`, and `ruff check src tests` exit 0 on this repo post-cut.
+  Milestone V closes; no further V-* backlog tasks remain.

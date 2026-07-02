@@ -883,7 +883,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   ruff check src tests, kelix lint on this repo — all exit 0. Test: README first
   30 lines contain value sentence and value-demo.md link; CI commands pass.
 
-- [ ] KV18: value-cut phase gate proof | priority: 38 | status: ready | by: owner | deps: KV17 | phase: V-PROOF | req: REQ-VP3
+- [x] KV18: value-cut phase gate proof | priority: 38 | status: done | by: owner | deps: KV17 | phase: V-PROOF | req: REQ-VP3
   details: update DECISIONS.md with value-cut closure evidence: value-demo run
   id, transcript path, ledger final verdict counts (N SHARPEN / KEEP / SCRAP).
   Run kelix lint on .kelix/backlog.md; validate_plan if roadmap changed. Record
