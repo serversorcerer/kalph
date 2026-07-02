@@ -34,7 +34,26 @@ RATIONALE_RE = re.compile(r"^RATIONALE:\s*(.+)$", re.MULTILINE)
 FROM_COMMIT_RATIONALE_PREFIX = "(from commit) "
 TASK_FROM_ROLE_RE = re.compile(r"Your assigned task for this iteration:\s*(\S+)")
 TASK_FROM_RATIONALE_RE = re.compile(r"^(\S+?)(?:\s*[—\-:]|$)")
+SKILL_MANIFEST_SOURCE_RE = re.compile(r"\.kelix/skills/([^/]+)/SKILL\.md$")
 STOP_FILE = "STOP"  # .kelix/STOP — global kill switch
+
+
+def _skills_injected_from_manifest(manifest: list[dict]) -> list[str]:
+    """Basenames of promoted skills listed in the context manifest skills slot."""
+    names: list[str] = []
+    seen: set[str] = set()
+    for item in manifest:
+        if item.get("slot") != "skills":
+            continue
+        source = str(item.get("source") or "")
+        match = SKILL_MANIFEST_SOURCE_RE.search(source)
+        if not match:
+            continue
+        name = match.group(1)
+        if name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
 
 
 @dataclass
@@ -289,6 +308,7 @@ class Runner:
         *,
         circuit_breaker_cause: str = "",
         backlog_lint: dict[str, int] | None = None,
+        skills_injected: list[str] | None = None,
     ) -> None:
         task_id = self._ledger_task_id(rec, current_task)
         retry_count = sum(
@@ -307,6 +327,7 @@ class Runner:
                 agent_id=self.agent_id,
                 fleet_id=self.fleet_id,
                 backlog_lint=backlog_lint or {},
+                skills_injected=list(skills_injected or []),
             )
         )
 
@@ -438,6 +459,7 @@ class Runner:
             if role_extra:
                 context["role"] = (context["role"] or "") + "\n" + role_extra
             prompt, manifest = assemble_prompt(template, cfg, **context)
+            skills_injected = _skills_injected_from_manifest(manifest)
             self._write_context_manifest(
                 run_dir,
                 index,
@@ -455,7 +477,11 @@ class Runner:
                     workdir, backlog_before_text, backlog_before_tasks
                 )
                 self._record_ledger_row(
-                    result, rec, current_task, backlog_lint=backlog_lint
+                    result,
+                    rec,
+                    current_task,
+                    backlog_lint=backlog_lint,
+                    skills_injected=skills_injected,
                 )
                 consecutive_failures += 1
                 log(f"  iter {index}: {rec.failure}")
@@ -511,7 +537,13 @@ class Runner:
             backlog_lint = self._backlog_lint_if_dirty(
                 workdir, backlog_before_text, backlog_before_tasks
             )
-            self._record_ledger_row(result, rec, current_task, backlog_lint=backlog_lint)
+            self._record_ledger_row(
+                result,
+                rec,
+                current_task,
+                backlog_lint=backlog_lint,
+                skills_injected=skills_injected,
+            )
             self._save_state(run_dir, result)
 
             if rec.sentinel:
@@ -591,6 +623,13 @@ class Runner:
                 append_run_metrics(self.cfg, result.ledger_rows)
             except Exception as exc:  # metrics rollup must never mask run status
                 log(f"  (metrics rollup failed: {exc})")
+        if self.cfg.memory.distill_skills and not self.fleet_id:
+            try:
+                from .distill import run_distillation
+
+                run_distillation(self.cfg, result, run_dir, log=log)
+            except Exception as exc:  # distillation must never mask run status
+                log(f"  (distillation failed: {exc})")
         log(
             f"kelix run {result.run_id} finished: {result.status} "
             f"({len(result.iterations)} iterations)"

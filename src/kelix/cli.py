@@ -48,6 +48,9 @@ commands = []
 
 [git]
 isolation = "worktree"    # worktree | branch | none
+
+# [memory]
+# distill_skills = true     # post-retrospective skill distillation pass
 """
 
 PHASES_README_TEMPLATE = """\
@@ -311,6 +314,149 @@ def cmd_diagnose(args) -> int:
     return 1 if result.status == "validation_failed" else 2
 
 
+def cmd_propose(args) -> int:
+    from .config import ConfigError
+    from .loop import LoopError
+    from .propose import ProposeError, ProposeRunner, metrics_excerpt
+
+    root = Path(args.path).resolve()
+    try:
+        cfg = load_config(root)
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if getattr(args, "record_merge", None):
+        return _cmd_record_proposal(
+            cfg,
+            merge_sha=args.record_merge,
+            close_reason="",
+            proposal_id=args.proposal_id or "",
+            merged_at_run=args.merged_at_run or "",
+        )
+    if getattr(args, "record_close", None):
+        return _cmd_record_proposal(
+            cfg,
+            merge_sha="",
+            close_reason=args.record_close,
+            proposal_id=args.proposal_id or "",
+            merged_at_run="",
+        )
+
+    try:
+        result = ProposeRunner(cfg).run(
+            diagnosis_file=args.diagnosis_file or "",
+        )
+    except (ProposeError, LoopError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    from .art import say
+
+    if result.status == "completed":
+        print(say(f"proposal ready: branch {result.branch}", "ok"))
+        print(say(f"sidecar written: {result.sidecar_path}", "ok"))
+        if result.iteration and result.iteration.predicted_improvement:
+            print(f"predicted improvement: {result.iteration.predicted_improvement}")
+        if not getattr(args, "no_pr", False):
+            from .pr import open_propose_pr
+
+            pr_url = open_propose_pr(
+                cfg,
+                result,
+                metrics_excerpt=metrics_excerpt(cfg),
+                diagnosis_file=result.diagnosis_file,
+            )
+            if pr_url:
+                print(say(f"PR opened: {pr_url}", "ok"))
+        return 0
+
+    for finding in result.findings:
+        print(f"error: {finding}", file=sys.stderr)
+    return 1 if result.status == "validation_failed" else 2
+
+
+def _cmd_record_proposal(
+    cfg,
+    *,
+    merge_sha: str,
+    close_reason: str,
+    proposal_id: str,
+    merged_at_run: str,
+) -> int:
+    from .metrics import (
+        default_merged_at_run_id,
+        load_metrics,
+        metrics_path,
+        record_proposal_outcome,
+        save_metrics,
+    )
+    from .propose import ProposeError, latest_proposal_id, load_proposal_sidecar
+
+    pid = proposal_id or latest_proposal_id(cfg)
+    if not pid:
+        print("error: no proposal_id and no proposal sidecar found", file=sys.stderr)
+        return 2
+
+    try:
+        sidecar = load_proposal_sidecar(cfg, pid)
+    except ProposeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    path = metrics_path(cfg)
+    metrics = load_metrics(path)
+    run_boundary = merged_at_run or default_merged_at_run_id(metrics)
+    prediction = str(sidecar.get("prediction") or "")
+
+    try:
+        outcome = record_proposal_outcome(
+            metrics,
+            proposal_id=pid,
+            prediction=prediction,
+            merge_sha=merge_sha,
+            close_reason=close_reason,
+            merged_at_run_id=run_boundary,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    save_metrics(path, metrics)
+    from .art import say
+
+    label = merge_sha or close_reason
+    print(say(f"recorded proposal {pid}: {label}", "ok"))
+    print(f"grade: {outcome.grade or 'pending'}")
+    return 0
+
+
+def cmd_metrics_grade_proposal(args) -> int:
+    from .config import ConfigError
+    from .metrics import grade_proposal, load_metrics, metrics_path, save_metrics
+
+    root = Path(args.path).resolve()
+    try:
+        cfg = load_config(root)
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    path = metrics_path(cfg)
+    metrics = load_metrics(path)
+    try:
+        grade = grade_proposal(metrics, args.proposal_id)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    save_metrics(path, metrics)
+    from .art import say
+
+    print(say(f"proposal {args.proposal_id}: {grade}", "ok"))
+    return 0
+
+
 def cmd_sync(args) -> int:
     """Mirror tracker issues into the backlog. Non-fatal: tracker problems are
     logged and skipped, never fatal to the loop."""
@@ -420,6 +566,59 @@ def main(argv: list[str] | None = None) -> int:
         help="output path (default: .kelix/memory/diagnosis-<timestamp>.md)",
     )
     p.set_defaults(func=cmd_diagnose)
+
+    p = sub.add_parser(
+        "propose",
+        help="propose a policy-surface tuning change (owner-invoked)",
+    )
+    p.add_argument("--path", default=".")
+    p.add_argument(
+        "--diagnosis-file",
+        default="",
+        help="optional diagnosis markdown to include as evidence",
+    )
+    p.add_argument(
+        "--no-pr",
+        action="store_true",
+        help="skip opening a GitHub PR after a successful proposal",
+    )
+    p.add_argument(
+        "--record-merge",
+        metavar="SHA",
+        default="",
+        help="record a merged proposal outcome (skips adapter iteration)",
+    )
+    p.add_argument(
+        "--record-close",
+        metavar="REASON",
+        default="",
+        help="record a closed proposal outcome without merge",
+    )
+    p.add_argument(
+        "--proposal-id",
+        default="",
+        help="proposal id for --record-merge/--record-close (default: latest sidecar)",
+    )
+    p.add_argument(
+        "--merged-at-run",
+        default="",
+        help="last pre-merge run id for grading window (default: last ledger run)",
+    )
+    p.set_defaults(func=cmd_propose)
+
+    metrics_p = sub.add_parser("metrics", help="inspect or update loop outcome ledger")
+    metrics_sub = metrics_p.add_subparsers(dest="metrics_command", required=True)
+    grade_p = metrics_sub.add_parser(
+        "grade-proposal",
+        help="re-grade a recorded proposal from loop-metrics.json windows",
+    )
+    grade_p.add_argument("--path", default=".")
+    grade_p.add_argument(
+        "--proposal-id",
+        required=True,
+        help="proposal id to grade",
+    )
+    grade_p.set_defaults(func=cmd_metrics_grade_proposal)
 
     args = parser.parse_args(argv)
     return args.func(args)

@@ -46,7 +46,9 @@ description: How to regenerate the recorded API fixtures when the upstream schem
 ```
 
 `name` and `description` in the frontmatter are required for the skill to be
-discovered. In fleet mode there is a second location,
+discovered. Distillation candidates land under `.kelix/skills/_proposed/<name>/`
+and are excluded from the digest until the owner promotes them by moving the
+folder to `.kelix/skills/<name>/`. In fleet mode there is a second location,
 `.kelix/fleet/skills/<name>/SKILL.md` — a runner-side shared store so fleet
 agents see each other's discoveries before their branches merge (see
 [fleet.md](fleet.md)).
@@ -175,7 +177,7 @@ Top-level object (`schema_version: 1`):
 
 Per-iteration rows still carry `fleet_id` and distinct `agent_id` values; the summary row aggregates the whole fleet window.
 
-- **`proposal_outcomes[]`** — populated when the owner merges or closes a tuning PR (`kelix propose` / ST14). Each entry records `proposal_id`, `merge_sha` or `close_reason`, the agent's `prediction`, and a post-merge `grade` (`improved`, `regressed`, or `inconclusive`).
+- **`proposal_outcomes[]`** — populated when the owner merges or closes a tuning PR (`kelix propose` / ST14). Each entry records `proposal_id`, `merge_sha` or `close_reason`, the agent's `prediction`, optional `merged_at_run_id` (last pre-merge run for windowing), and a post-merge `grade` (`improved`, `regressed`, or `inconclusive`). Record with `kelix propose --record-merge <sha>` (or `--record-close`); re-grade with `kelix metrics grade-proposal --proposal-id <id>`. Grade compares verified rate and retry/breaker counts in the last five runs before merge vs the next five after; inconclusive when fewer than three post-merge runs exist.
 
 Implementation: `src/kelix/metrics.py` (`load_metrics`, `save_metrics`, `append_run_metrics`). Rows accumulate on `RunResult.ledger_rows` during the run and merge into `loop-metrics.json` immediately after `write_retrospective` in `loop.py` (fleet equivalent in `fleet.py`).
 

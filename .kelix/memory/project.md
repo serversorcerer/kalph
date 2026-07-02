@@ -33,7 +33,12 @@ Durable facts about this repo for future iterations.
   PYTHONPATH=src; that is sufficient. (Learned from run 20260702-002215.)
 - Prioritization rubric for backlog authoring and selection lives in
   `docs/prioritization.md` (owner-first, priority bands, decomposition/blocked rules).
-- PR flow lives in `src/kelix/pr.py` (`open_pr`, `build_pr_title`, `build_pr_body`).
+- PR flow lives in `src/kelix/pr.py` (`open_pr`, `build_pr_title`, `build_pr_body`,
+  `open_propose_pr`, `build_propose_pr_body`). `kelix propose` opens a PR after
+  validation unless `--no-pr`; body sections: Metric evidence, Diagnosis,
+  Predicted improvement, Changed policy surface. Owner records merge/close via
+  `--record-merge` / `--record-close`; `kelix metrics grade-proposal` re-grades
+  from loop-metrics windows (last 5 runs before vs next 5 after merge run id).
   `kelix run --pr` opens a GitHub PR after `completed` or `max_iterations` runs;
   refuses main/master/empty branches, pushes with `git push -u origin <branch>`,
   never `--force`. Returns None (log-and-skip) on any subprocess failure.
@@ -173,10 +178,13 @@ Durable facts about this repo for future iterations.
   `role-match: yes/no (role vs kind)` and a per-agent `role drift: N/M`
   line. Selection unchanged — reporting only. Tests in `tests/test_fleet.py`.
 - Loop metrics schema (`src/kelix/metrics.py`): `LoopMetrics` with
-  `iterations[]`, `fleet_summaries[]`, `proposal_outcomes[]`; each
-  `IterationLedgerRow` carries run_id, iteration, task_id, verified,
+  `iterations[]`, `fleet_summaries[]`, `proposal_outcomes[]`, `skill_efficacy{}`;
+  each `IterationLedgerRow` carries run_id, iteration, task_id, verified,
   retry_count, duration_s, failure, circuit_breaker_cause, agent_id,
-  fleet_id, backlog_lint, skills_injected, tokens always null. `load_metrics` /
+  fleet_id, backlog_lint, skills_injected, tokens always null. `skill_efficacy`
+  maps skill basename → `{with_rate, without_rate, matched_tasks}` recomputed
+  from all ledger rows on each `append_run_metrics` (partition by
+  `skills_injected`, rates only on rows with `task_id`). `load_metrics` /
   `save_metrics` tolerate missing/corrupt JSON. Tests in `tests/test_metrics.py`.
 - Per-iteration ledger capture (`loop.Runner`): after each iteration appends an
   `IterationLedgerRow` to `RunResult.ledger_rows`; task_id from
@@ -245,6 +253,29 @@ Durable facts about this repo for future iterations.
   `transcript-<n>.txt`); sections are headed by run/iteration/task; char budget
   from `[loop].diagnose_transcript_chars` with `[... truncated to N chars]`
   marker when exceeded; missing files skipped.
+- `kelix diagnose` adapter pass (`diagnose.DiagnoseRunner`) mirrors plan
+  worktree isolation; `assemble_diagnose_prompt` fills ledger excerpt +
+  transcripts; agent writes only the diagnosis path; `validate_diagnosis`
+  requires `## Findings` and a scoped run_id citation; never imported from
+  `loop.py` (owner-invoked only).
+- `kelix propose` (`propose.ProposeRunner`) creates branch
+  `{branch_prefix}propose-<run_id>`, one adapter iteration with
+  `assemble_propose_prompt` (loop-metrics excerpt + optional diagnosis);
+  agent must print `PREDICTED_IMPROVEMENT:`; post-iteration
+  `validate_propose_diff` on git diff vs pre-iteration checkpoint; sidecar at
+  `.kelix/memory/proposal-<id>.json`; never imported from `loop.py`.
+- Distillation candidates live under `.kelix/skills/_proposed/<name>/`; `list_skills`
+  skips that subtree until the owner moves the folder to `.kelix/skills/<name>/`.
+- Post-retrospective distillation (`distill.run_distillation`): when
+  `[memory].distill_skills=true` (default), solo `Runner._finish` invokes one
+  adapter pass with `DISTILLATION_TEMPLATE` over run transcripts + episode
+  outcomes; only `.kelix/skills/_proposed/<name>/SKILL.md` allowed (cap 3,
+  agentskills.io frontmatter via `_parse_skill`); transcript at
+  `.kelix/runs/<id>/distill/distill.log`. Skipped when `fleet_id` set — fleet
+  calls `run_fleet_distillation` once after `_write_fleet_retrospective`.
 
 ## Run 20260702-120914 (max_iterations)
+10 iterations, 9 verified. Failures: agent exit 143 (timeout); verification failed.
+
+## Run 20260702-124024 (max_iterations)
 10 iterations, 9 verified. Failures: agent exit 143 (timeout); verification failed.

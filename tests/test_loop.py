@@ -13,12 +13,15 @@ from kelix.metrics import METRICS_FILE, load_metrics
 from kelix.state import State, load_state, write_state
 
 
-def _config(repo, extra="", mock_dir="mockdir", isolation="none"):
+def _config(repo, extra="", mock_dir="mockdir", isolation="none", distill_skills=False):
     (repo / "kelix.toml").write_text(
         f"""
 [agent]
 adapter = "mock"
 mock_dir = "{mock_dir}"
+
+[memory]
+distill_skills = {"true" if distill_skills else "false"}
 
 [git]
 isolation = "{isolation}"
@@ -447,6 +450,40 @@ git add -A && git commit -q -m "T1: append kelix proposed slop"
     assert result.ledger_rows[0].backlog_lint.get("missing_details", 0) >= 1
 
 
+def test_ledger_row_skills_injected_from_manifest(repo):
+    skill_dir = repo / ".kelix" / "skills" / "foo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: foo\ndescription: Fixture skill for ledger capture\n---\n"
+    )
+    subprocess.run(
+        ["git", "add", "-A"],
+        cwd=str(repo),
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "add foo skill fixture"],
+        cwd=str(repo),
+        check=True,
+        capture_output=True,
+    )
+    write_mock_script(repo / "mockdir", "001.sh", COMMIT_TASK)
+    cfg = _config(repo, extra='[verify]\ncommands = ["true"]\n')
+    result = Runner(cfg).run(max_iterations=1, log=lambda *_: None)
+    assert len(result.ledger_rows) == 1
+    assert result.ledger_rows[0].skills_injected == ["foo"]
+    context = json.loads(
+        (cfg.kelix_dir / "runs" / result.run_id / "context-001.json").read_text()
+    )
+    assert any(
+        item["slot"] == "skills" and item["source"] == ".kelix/skills/foo/SKILL.md"
+        for item in context["items"]
+    )
+    metrics = load_metrics(cfg.kelix_dir / METRICS_FILE)
+    assert metrics.iterations[0].skills_injected == ["foo"]
+
+
 def test_loop_metrics_rollup_after_run(repo):
     write_mock_script(repo / "mockdir", "001.sh", COMMIT_TASK)
     cfg = _config(repo, extra='[verify]\ncommands = ["true"]\n')
@@ -480,3 +517,46 @@ def test_loop_metrics_rollup_appends_across_runs(repo):
     assert metrics.iterations[0].task_id == "T1"
     assert metrics.iterations[1].run_id == second.run_id
     assert metrics.iterations[1].task_id == "T2"
+
+
+DISTILL_AND_COMMIT = """\
+prompt=$(cat)
+if echo "$prompt" | grep -q "Distillation contract"; then
+  mkdir -p .kelix/skills/_proposed/test-skill
+  cat > .kelix/skills/_proposed/test-skill/SKILL.md << 'EOF'
+---
+name: test-skill
+description: Distilled from run transcripts
+---
+1. Reuse this procedure when the same failure mode appears.
+EOF
+  git add .kelix/skills/_proposed/test-skill/SKILL.md
+  git commit -q -m "distill: propose test-skill"
+else
+  echo "RATIONALE: T1 — highest priority ready task"
+  echo "work" >> work.txt
+  git add -A && git commit -q -m "T1: do work"
+fi
+"""
+
+
+def test_distillation_writes_proposed_skill(repo):
+    write_mock_script(repo / "mockdir", "001.sh", DISTILL_AND_COMMIT)
+    cfg = _config(repo, distill_skills=True)
+    result = Runner(cfg).run(max_iterations=1, log=lambda *_: None)
+    skill_md = repo / ".kelix" / "skills" / "_proposed" / "test-skill" / "SKILL.md"
+    assert skill_md.is_file()
+    text = skill_md.read_text()
+    assert "name: test-skill" in text
+    assert "description: Distilled from run transcripts" in text
+    distill_log = cfg.kelix_dir / "runs" / result.run_id / "distill" / "distill.log"
+    assert distill_log.is_file()
+
+
+def test_distillation_skipped_when_disabled(repo):
+    write_mock_script(repo / "mockdir", "001.sh", DISTILL_AND_COMMIT)
+    cfg = _config(repo, distill_skills=False)
+    result = Runner(cfg).run(max_iterations=1, log=lambda *_: None)
+    skill_md = repo / ".kelix" / "skills" / "_proposed" / "test-skill" / "SKILL.md"
+    assert not skill_md.exists()
+    assert not (cfg.kelix_dir / "runs" / result.run_id / "distill").exists()

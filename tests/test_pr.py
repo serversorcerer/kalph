@@ -138,6 +138,61 @@ def test_build_pr_body_standalone(tmp_path):
     assert "iteration 1: verified" in body
 
 
+def test_build_propose_pr_body_sections(tmp_path):
+    from kelix.pr import build_propose_pr_body
+    from kelix.propose import ProposeIteration, ProposeResult
+
+    result = ProposeResult(
+        proposal_id="20260702-120000",
+        touched_files=[".kelix/prompts/iteration.md"],
+        iteration=ProposeIteration(
+            started_at="",
+            predicted_improvement="fewer retries on context-heavy tasks",
+        ),
+    )
+    body = build_propose_pr_body(
+        _cfg(tmp_path),
+        result,
+        metrics_excerpt='{"iterations": [{"verified": false}]}',
+        diagnosis_file=".kelix/memory/diagnosis.md",
+    )
+    assert "## Metric evidence" in body
+    assert '"verified": false' in body
+    assert "## Diagnosis" in body
+    assert "diagnosis.md" in body
+    assert "## Predicted improvement" in body
+    assert "fewer retries" in body
+    assert "## Changed policy surface" in body
+    assert "iteration.md" in body
+
+
+def test_open_propose_pr_push_and_gh(tmp_path, record_subprocess):
+    from kelix.pr import open_propose_pr
+    from kelix.propose import ProposeIteration, ProposeResult
+
+    result = ProposeResult(
+        proposal_id="20260702-120000",
+        branch="kelix/propose-20260702-120000",
+        workdir=tmp_path,
+        iteration=ProposeIteration(
+            started_at="",
+            predicted_improvement="test",
+        ),
+    )
+    url = open_propose_pr(
+        _cfg(tmp_path),
+        result,
+        metrics_excerpt='{"iterations": []}',
+    )
+    assert url == "https://github.com/org/repo/pull/42"
+    assert len(record_subprocess) == 2
+    assert record_subprocess[0][:3] == ["git", "push", "-u"]
+    gh_call = record_subprocess[1]
+    body_index = gh_call.index("--body") + 1
+    body = gh_call[body_index]
+    assert "## Metric evidence" in body
+
+
 def test_returns_none_when_gh_fails(tmp_path, monkeypatch):
     def fake_run(args, **kwargs):
         if args and args[0] == "gh":

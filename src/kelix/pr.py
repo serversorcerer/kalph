@@ -10,10 +10,14 @@ import logging
 import re
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .config import Config
 from .gitutil import PROTECTED_BRANCHES
 from .loop import RunResult
+
+if TYPE_CHECKING:
+    from .propose import ProposeResult
 
 log = logging.getLogger(__name__)
 
@@ -77,18 +81,8 @@ def build_pr_body(cfg: Config, result: RunResult) -> str:
     return "\n".join(lines)
 
 
-def open_pr(cfg: Config, result: RunResult, run_dir: Path) -> str | None:
-    """Push the run branch and open a GitHub PR. Returns the PR URL or None."""
-    del run_dir  # reserved for future run-artifact references
-    branch = result.branch
-    if not branch or branch in PROTECTED_BRANCHES:
-        log.info("refusing to open PR: branch=%r", branch)
-        return None
-
-    workdir = Path(result.workdir) if result.workdir else cfg.root
-    title = build_pr_title(result)
-    body = build_pr_body(cfg, result)
-
+def _push_and_create_pr(workdir: Path, branch: str, title: str, body: str) -> str | None:
+    """Push *branch* and open a GitHub PR. Returns the PR URL or None."""
     try:
         push = subprocess.run(
             ["git", "push", "-u", "origin", branch],
@@ -127,3 +121,94 @@ def open_pr(cfg: Config, result: RunResult, run_dir: Path) -> str | None:
     except Exception as exc:  # log-and-skip; never raise out
         log.warning("open_pr failed: %s", exc)
         return None
+
+
+def build_propose_pr_title(result: ProposeResult) -> str:
+    """Return a PR title for a tuning proposal."""
+    prediction = ""
+    if result.iteration and result.iteration.predicted_improvement:
+        prediction = result.iteration.predicted_improvement
+    if prediction:
+        short = prediction if len(prediction) <= 72 else prediction[:69] + "..."
+        return f"kelix propose: {short}"
+    return f"kelix propose: {result.proposal_id}"
+
+
+def build_propose_pr_body(
+    cfg: Config,
+    result: ProposeResult,
+    *,
+    metrics_excerpt: str,
+    diagnosis_file: str = "",
+) -> str:
+    """Build a PR body for a policy-surface tuning proposal."""
+    prediction = ""
+    if result.iteration and result.iteration.predicted_improvement:
+        prediction = result.iteration.predicted_improvement
+
+    lines = ["## Metric evidence", ""]
+    if metrics_excerpt.strip():
+        lines.extend(["```json", metrics_excerpt.strip(), "```"])
+    else:
+        lines.append("(no loop-metrics.json data)")
+
+    lines.extend(["", "## Diagnosis", ""])
+    if diagnosis_file:
+        lines.append(f"- `{diagnosis_file}`")
+    else:
+        lines.append("- (none supplied)")
+
+    lines.extend(["", "## Predicted improvement", ""])
+    lines.append(prediction or "(not recorded)")
+
+    lines.extend(["", "## Changed policy surface", ""])
+    if result.touched_files:
+        lines.extend(f"- `{path}`" for path in result.touched_files)
+    else:
+        lines.append("- (none)")
+
+    lines.extend(
+        [
+            "",
+            f"Opened by Kelix propose {result.proposal_id}; review before merging.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def open_propose_pr(
+    cfg: Config,
+    result: ProposeResult,
+    *,
+    metrics_excerpt: str,
+    diagnosis_file: str = "",
+) -> str | None:
+    """Push the propose branch and open a GitHub PR. Returns the PR URL or None."""
+    branch = result.branch
+    if not branch or branch in PROTECTED_BRANCHES:
+        log.info("refusing to open propose PR: branch=%r", branch)
+        return None
+
+    workdir = result.workdir if result.workdir else cfg.root
+    title = build_propose_pr_title(result)
+    body = build_propose_pr_body(
+        cfg,
+        result,
+        metrics_excerpt=metrics_excerpt,
+        diagnosis_file=diagnosis_file,
+    )
+    return _push_and_create_pr(workdir, branch, title, body)
+
+
+def open_pr(cfg: Config, result: RunResult, run_dir: Path) -> str | None:
+    """Push the run branch and open a GitHub PR. Returns the PR URL or None."""
+    del run_dir  # reserved for future run-artifact references
+    branch = result.branch
+    if not branch or branch in PROTECTED_BRANCHES:
+        log.info("refusing to open PR: branch=%r", branch)
+        return None
+
+    workdir = Path(result.workdir) if result.workdir else cfg.root
+    title = build_pr_title(result)
+    body = build_pr_body(cfg, result)
+    return _push_and_create_pr(workdir, branch, title, body)
