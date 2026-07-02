@@ -728,7 +728,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
 
 ### Phase V-LEDGER — The value ledger
 
-- [ ] KV1: write docs/value-ledger.md | priority: 55 | status: proposed | by: kelix | deps: KE32 | phase: V-LEDGER | req: REQ-VL1, REQ-VL2, REQ-VL3
+- [ ] KV1: write docs/value-ledger.md | priority: 55 | status: ready | by: owner | deps: KE32 | phase: V-LEDGER | req: REQ-VL1, REQ-VL2, REQ-VL3
   details: create docs/value-ledger.md with one markdown table row per module
   listed in REQ-VL1 (loop, verify, plan+interview, lint, state/roadmap/backlog,
   memory, skills, fleet, claims, mcp_server, sync/, pr, kiro, security,
@@ -747,7 +747,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
 
 ### Phase V-SHARPEN — Double down (execution after ledger + scrap)
 
-- [ ] KV2: delete sync/ module and kelix sync | priority: 54 | status: proposed | by: kelix | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
+- [ ] KV2: delete sync/ module and kelix sync | priority: 54 | status: ready | by: owner | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
   details: per owner decision and ledger SCRAP row for sync/: delete
   src/kelix/sync/ (all files), remove cmd_sync and sync subparser from
   src/kelix/cli.py, remove sync imports/tests (tests/test_sync*.py if present),
@@ -756,7 +756,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   `rg -i 'kelix sync|from kelix.sync|kelix/sync' src tests docs` returns zero
   matches; `pytest -q` and `ruff check src tests` pass.
 
-- [ ] KV3: delete pr.py and --pr flag | priority: 53 | status: proposed | by: kelix | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
+- [ ] KV3: delete pr.py and --pr flag | priority: 53 | status: ready | by: owner | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
   details: per owner decision and ledger SCRAP row for pr: delete
   src/kelix/pr.py and tests/test_pr.py; remove --pr from kelix run argparse
   and any pr.open_pr calls in loop.py/cli.py; strip --pr from docs (README,
@@ -766,7 +766,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   `rg -- '--pr|from kelix.pr|kelix/pr' src tests docs integrations` returns
   zero matches except docs/value-ledger.md historical note if any; pytest -q pass.
 
-- [ ] KV4: execute mcp_server SCRAP if ledger says SCRAP | priority: 52 | status: proposed | by: kelix | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
+- [ ] KV4: execute mcp_server SCRAP if ledger says SCRAP | priority: 52 | status: ready | by: owner | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
   details: read docs/value-ledger.md mcp_server row. If verdict is SCRAP:
   delete src/kelix/mcp_server.py, tests/test_mcp_server.py, kelix mcp
   subcommand, docs/mcp.md, MCP references in cli help and integrations/kiro.
@@ -775,7 +775,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   src tests` zero matches and pytest -q pass; if not SCRAP, only value-ledger.md
   or task commit notes change.
 
-- [ ] KV5: execute skills SCRAP if ledger says SCRAP | priority: 51 | status: proposed | by: kelix | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
+- [ ] KV5: execute skills SCRAP if ledger says SCRAP | priority: 51 | status: ready | by: owner | deps: KV1 | phase: V-LEDGER | req: REQ-VL3
   details: read docs/value-ledger.md skills row. If SCRAP: remove skill
   acquisition/distillation plumbing that never demonstrated learning (D17
   evidence: zero skills in ~20 v0.1 iterations) while preserving frozen
@@ -784,7 +784,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   tests. If KEEP/SHARPEN: no-op with ledger citation. Acceptance: pytest -q
   pass; behavior matches ledger verdict documented in commit message.
 
-- [ ] KV6: receipt-style run-complete message | priority: 50 | status: proposed | by: kelix | deps: KV2, KV3 | phase: V-SHARPEN | req: REQ-VS1
+- [ ] KV6: receipt-style run-complete message | priority: 50 | status: ready | by: owner | deps: KV2, KV3 | phase: V-SHARPEN | req: REQ-VS1
   details: in src/kelix/loop.py and cli.py run completion path, replace bare
   "done" output with a receipt block listing each [verify] command, its exit
   status, and SHAs of commits verified this run (or "none" if capped early).
@@ -792,7 +792,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   mock run with verify echo succeeds → stdout contains command name, exit 0,
   and at least one commit hash substring.
 
-- [ ] KV7: plan interview cap seven MC questions | priority: 49 | status: proposed | by: kelix | deps: KV1 | phase: V-SHARPEN | req: REQ-VS2
+- [ ] KV7: plan interview cap seven MC questions | priority: 49 | status: ready | by: owner | deps: KV1 | phase: V-SHARPEN | req: REQ-VS2
   details: in src/kelix/plan.py and PLANNING_TEMPLATE, enforce interview
   output ≤ 7 questions; reject/retry planning output with >7. Each question
   must be multiple-choice (2–4 options + recommendation) — no open-ended essay
@@ -800,21 +800,21 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   fixture emitting 8 questions → validation failure or truncation to 7; fixture
   with 5 MC questions → accepted; CONTEXT.md receives answers on resume path.
 
-- [ ] KV8: circuit breaker actionable message | priority: 48 | status: proposed | by: kelix | deps: KV6 | phase: V-SHARPEN | req: REQ-VS3
+- [ ] KV8: circuit breaker actionable message | priority: 48 | status: ready | by: owner | deps: KV6 | phase: V-SHARPEN | req: REQ-VS3
   details: when circuit_breaker_threshold trips in loop.py, stderr/stdout must
   state: breaker cause (e.g. consecutive no-diff), active task id, and one-line
   fix ("edit backlog task X details:" or "check worktree for uncommitted changes
   in path Y"). Test: fixture triggering no-diff breaker → output contains task
   id and the string "fix" or actionable path; run stops before next iteration.
 
-- [ ] KV9: lint and spec-gate actionable findings | priority: 47 | status: proposed | by: kelix | deps: KV6 | phase: V-SHARPEN | req: REQ-VS4
+- [ ] KV9: lint and spec-gate actionable findings | priority: 47 | status: ready | by: owner | deps: KV6 | phase: V-SHARPEN | req: REQ-VS4
   details: extend src/kelix/lint.py formatters and run spec-gate (KE29 if
   shipped, else loop preflight lint) so each Finding prints: task id, rule id,
   message, and fix line ("add details: with a test path" / "remove unfalsifiable
   word X in details"). Test: lint_backlog on slop fixture → stderr includes
   task id + rule + fix for every finding; kelix lint exit 1.
 
-- [ ] KV10: fleet receipt messaging | priority: 46 | status: proposed | by: kelix | deps: KV6 | phase: V-SHARPEN | req: REQ-VS5
+- [ ] KV10: fleet receipt messaging | priority: 46 | status: ready | by: owner | deps: KV6 | phase: V-SHARPEN | req: REQ-VS5
   details: fleet run end and retrospective (src/kelix/fleet.py) echo REQ-VS1
   receipt style per agent: verify commands + exit statuses + verified commit
   SHAs + claim outcomes. Update docs/fleet.md opening with receipt example
@@ -823,7 +823,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
 
 ### Phase V-SIMPLE — Cut the surface
 
-- [ ] KV11: CLI audit against ledger | priority: 45 | status: proposed | by: kelix | deps: KV2, KV3, KV4 | phase: V-SIMPLE | req: REQ-VM1
+- [ ] KV11: CLI audit against ledger | priority: 45 | status: ready | by: owner | deps: KV2, KV3, KV4 | phase: V-SIMPLE | req: REQ-VM1
   details: audit src/kelix/cli.py subcommands against docs/value-ledger.md;
   remove any command whose module was SCRAP (sync, mcp if KV4 scrapped). Ensure
   init/plan/run are the documented happy path; lint, status, stop remain with
@@ -831,14 +831,14 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   section. Test: `kelix --help` lists init, plan, run; scrapped subcommands
   absent; pytest -q pass.
 
-- [ ] KV12: trim kelix.toml template to one screen | priority: 44 | status: proposed | by: kelix | deps: KV11 | phase: V-SIMPLE | req: REQ-VM2
+- [ ] KV12: trim kelix.toml template to one screen | priority: 44 | status: ready | by: owner | deps: KV11 | phase: V-SIMPLE | req: REQ-VM2
   details: CONFIG_TEMPLATE in cli.py ≤ 25 lines including comments. Remove or
   default keys unused in docs/proof runs, test fixtures, and samples/value-demo/.
   Keys removed from template must still parse via config.py defaults. Test:
   count template lines ≤ 25; init on bare repo writes template; load_config
   round-trip on template succeeds.
 
-- [ ] KV13: docs index intent routing | priority: 43 | status: proposed | by: kelix | deps: KV4, KV5 | phase: V-SIMPLE | req: REQ-VM3
+- [ ] KV13: docs index intent routing | priority: 43 | status: ready | by: owner | deps: KV4, KV5 | phase: V-SIMPLE | req: REQ-VM3
   details: rewrite docs/index.md top section to route by intent ("I want to ship
   X unattended") with ≤ 5 links (quickstart, planning or writing-for-the-loop,
   concept, SECURITY, compare or proof). Delete or merge doc pages for SCRAP
@@ -846,7 +846,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   to a SHARPEN or KEEP row in docs/value-ledger.md. Acceptance: index.md has
   ≤ 5 primary intent links above the fold; no link targets a SCRAP-only page.
 
-- [ ] KV14: quickstart init-plan-run path | priority: 42 | status: proposed | by: kelix | deps: KV11, KV12 | phase: V-SIMPLE | req: REQ-VM4
+- [ ] KV14: quickstart init-plan-run path | priority: 42 | status: ready | by: owner | deps: KV11, KV12 | phase: V-SIMPLE | req: REQ-VM4
   details: rewrite docs/quickstart.md so numbered steps are exactly: kelix init
   → write/point goal → kelix plan → promote tasks → kelix run → read verified
   commits on run branch. Document step count in the doc header (e.g. "6 steps
@@ -857,7 +857,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
 
 ### Phase V-PROOF — Value demo release gate
 
-- [ ] KV15: value-demo sample repo scaffold | priority: 41 | status: proposed | by: kelix | deps: KV14 | phase: V-PROOF | req: REQ-VP1
+- [ ] KV15: value-demo sample repo scaffold | priority: 41 | status: ready | by: owner | deps: KV14 | phase: V-PROOF | req: REQ-VP1
   details: create samples/value-demo/ — stdlib-only toy project (e.g. tiny
   calculator or todo module) with GOAL.md, .kelix/kelix.toml ([verify] =
   pytest -q), and a backlog of 3–5 owner-ready tasks sized for one iteration
@@ -867,7 +867,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   No fleet/pr/sync. Acceptance: directory exists; pytest -q passes inside sample;
   run-demo.sh is executable and documents promote step for human.
 
-- [ ] KV16: capture value-demo transcript | priority: 40 | status: proposed | by: kelix | deps: KV15 | phase: V-PROOF | req: REQ-VP2
+- [ ] KV16: capture value-demo transcript | priority: 40 | status: ready | by: owner | deps: KV15 | phase: V-PROOF | req: REQ-VP2
   details: execute samples/value-demo/run-demo.sh on a clean worktree; capture
   full transcript to docs/proof/value-demo.md including: goal text, interview
   Q&A (or QUESTIONS.md path), promote step, each iteration summary, verify
@@ -875,7 +875,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   Embed reproduction commands at top of doc. Acceptance: another agent can
   reproduce by following only value-demo.md commands; doc links receipt paths.
 
-- [ ] KV17: README value sentence and demo link | priority: 39 | status: proposed | by: kelix | deps: KV16 | phase: V-PROOF | req: REQ-VP3
+- [ ] KV17: README value sentence and demo link | priority: 39 | status: ready | by: owner | deps: KV16 | phase: V-PROOF | req: REQ-VP3
   details: rewrite README.md first screen (before install details): lead with
   value sentence ("you write a well-specified goal, walk away, and come back to
   verified commits"), link to docs/proof/value-demo.md as the receipt, then
@@ -883,7 +883,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   ruff check src tests, kelix lint on this repo — all exit 0. Test: README first
   30 lines contain value sentence and value-demo.md link; CI commands pass.
 
-- [ ] KV18: value-cut phase gate proof | priority: 38 | status: proposed | by: kelix | deps: KV17 | phase: V-PROOF | req: REQ-VP3
+- [ ] KV18: value-cut phase gate proof | priority: 38 | status: ready | by: owner | deps: KV17 | phase: V-PROOF | req: REQ-VP3
   details: update DECISIONS.md with value-cut closure evidence: value-demo run
   id, transcript path, ledger final verdict counts (N SHARPEN / KEEP / SCRAP).
   Run kelix lint on .kelix/backlog.md; validate_plan if roadmap changed. Record
