@@ -439,7 +439,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   agentskills.io frontmatter. Cap at 3 candidates; ignore extras with warning.
   tests/test_loop.py: mock distillation script writes one SKILL.md → file exists.
 
-- [ ] ST17: skills_injected on ledger rows | priority: 41 | status: ready | by: owner | deps: ST16, ST2 | phase: T-SKILLS | req: REQ-TS3
+- [x] ST17: skills_injected on ledger rows | priority: 41 | status: done | by: owner | deps: ST16, ST2 | phase: T-SKILLS | req: REQ-TS3
   details: when writing context-<n>.json in loop.py, copy skills-slot manifest
   entries' source paths into IterationLedgerRow.skills_injected (basename skill
   name). Persist through ST4 rollup. tests/test_loop.py: manifest lists
