@@ -814,7 +814,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   word X in details"). Test: lint_backlog on slop fixture → stderr includes
   task id + rule + fix for every finding; kelix lint exit 1.
 
-- [ ] KV10: fleet receipt messaging | priority: 46 | status: ready | by: owner | deps: KV6 | phase: V-SHARPEN | req: REQ-VS5
+- [x] KV10: fleet receipt messaging | priority: 46 | status: done | by: owner | deps: KV6 | phase: V-SHARPEN | req: REQ-VS5
   details: fleet run end and retrospective (src/kelix/fleet.py) echo REQ-VS1
   receipt style per agent: verify commands + exit statuses + verified commit
   SHAs + claim outcomes. Update docs/fleet.md opening with receipt example

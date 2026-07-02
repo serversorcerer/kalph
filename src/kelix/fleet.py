@@ -274,7 +274,10 @@ def run_fleet(cfg: Config, config_file: str, max_iterations: int | None = None) 
     for t in threads:
         t.join()
 
-    _write_fleet_retrospective(cfg, spec, results, errors)
+    claims = list_claims(cfg.kelix_dir)
+    _write_fleet_retrospective(cfg, spec, results, errors, claims)
+    if results:
+        _print_fleet_run_receipt(spec, results, claims)
     if results:
         try:
             summary = compute_fleet_summary(fleet_id, results)
@@ -325,6 +328,73 @@ def _role_match_label(role: str, task: Task | None) -> str:
     return f"; role-match: {verdict} ({role} vs {kind})"
 
 
+def _verify_results(result: RunResult) -> list[tuple[str, int]]:
+    if result.last_verify_report is None:
+        return []
+    return [(r.command, r.exit_code) for r in result.last_verify_report.results]
+
+
+def _agent_claim_receipt_lines(agent_id: str, claims: list[dict]) -> list[str]:
+    agent_claims = [c for c in claims if c.get("agent") == agent_id]
+    if not agent_claims:
+        return ["- claims: none"]
+    lines = ["- claims:"]
+    for claim in agent_claims:
+        status = "done" if claim.get("done") else "open"
+        lines.append(f"  - {claim['task']}: {status}")
+    return lines
+
+
+def _agent_receipt_md(result: RunResult, agent_id: str, claims: list[dict]) -> list[str]:
+    verify_results = _verify_results(result)
+    lines = ["### Receipt"]
+    if verify_results:
+        for command, exit_code in verify_results:
+            lines.append(f"- verify: `{command}` exit {exit_code}")
+    else:
+        lines.append("- verify: none configured")
+    if result.verified_commits:
+        shas = ", ".join(f"`{sha}`" for sha in result.verified_commits)
+        lines.append(f"- verified commits: {shas}")
+    else:
+        lines.append("- verified commits: none")
+    lines.extend(_agent_claim_receipt_lines(agent_id, claims))
+    return lines
+
+
+def _print_fleet_run_receipt(
+    spec: FleetSpec,
+    results: dict[str, RunResult],
+    claims: list[dict],
+) -> None:
+    from .art import run_complete_receipt, say
+
+    parts = [say("fleet run complete", "ok")]
+    for agent in spec.agents:
+        parts.append(say(f"{agent.id} ({agent.role})", "climb"))
+        result = results.get(agent.id)
+        if result is None:
+            parts.append(say("no result", "fail"))
+            continue
+        verified_count = sum(1 for rec in result.iterations if rec.verified is True)
+        parts.append(
+            run_complete_receipt(
+                run_id=result.run_id,
+                status=result.status,
+                iteration_count=len(result.iterations),
+                verified_count=verified_count,
+                verify_results=_verify_results(result) or None,
+                verified_commits=list(result.verified_commits),
+                diagnosis=result.diagnosis,
+            )
+        )
+        for claim in [c for c in claims if c.get("agent") == agent.id]:
+            status = "done" if claim.get("done") else "open"
+            kind = "ok" if claim.get("done") else "info"
+            parts.append(say(f"claim {claim['task']}: {status}", kind))
+    print("\n".join(parts))
+
+
 def _count_role_drift(
     role: str, iterations: list[IterationRecord], tasks_by_id: dict[str, Task]
 ) -> tuple[int, int]:
@@ -352,6 +422,7 @@ def _write_fleet_retrospective(
     spec: FleetSpec,
     results: dict[str, RunResult],
     errors: dict[str, str],
+    claims: list[dict] | None = None,
 ) -> None:
     out_dir = cfg.kelix_dir / "runs"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -387,9 +458,12 @@ def _write_fleet_retrospective(
         drift, scored = _count_role_drift(agent.role, r.iterations, tasks_by_id)
         if scored:
             lines.append(f"- role drift: {drift}/{scored} iterations")
+        lines.extend(_agent_receipt_md(r, agent.id, claims or []))
         lines.append("")
     lines.append("## Task claims at end of fleet run")
-    for claim in list_claims(cfg.kelix_dir):
+    if claims is None:
+        claims = list_claims(cfg.kelix_dir)
+    for claim in claims:
         done = " (done)" if claim.get("done") else ""
         lines.append(f"- {claim['task']}: {claim['agent']}{done}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

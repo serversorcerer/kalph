@@ -11,6 +11,24 @@ repo. Session 1 claimed four tasks across three agents — one claim per task,
 [final build report](proof/final-report.md#d2--fleet-proof-docsprooffleet-sessionlog-fleet-verifier-review-notemd).
 Reproduce claim and wave selection with `pytest tests/test_fleet.py -q`.
 
+When a fleet run finishes, Kelix prints a **receipt per agent** (same shape as
+solo `kelix run`): verify command exits, verified commit SHAs, and claim
+outcomes. The fleet retrospective repeats that block under each agent. Example
+from session 1:
+
+```
+◉ fleet run complete
+↻ builder-1 (builder)
+◉ run 20260702-011124 finished: completed (2 iterations, 2 verified-done)
+◉ verify: pytest -q exit 0
+◉ verified commits: abc1234, def5678
+◉ claim F1: done
+◉ claim S1: done
+```
+
+(Fleet session 1 predates receipt formatting; see
+`tests/test_fleet.py::test_fleet_run_prints_verify_receipt` for the live shape.)
+
 Fleet mode runs several independent Kelix loops against one repository and one
 backlog. There is no message bus and no RPC — that is a mission non-goal.
 Agents coordinate **only** through files under `.kelix/fleet/` and through

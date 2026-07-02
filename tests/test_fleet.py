@@ -95,6 +95,9 @@ def _fleet_repo(tmp_path, n_scripts=6):
 adapter = "mock"
 mock_dir = "mockdir"
 
+[verify]
+commands = ["true"]
+
 [git]
 isolation = "worktree"
 """
@@ -215,6 +218,26 @@ def test_fleet_run_end_to_end_zero_collisions(tmp_path):
     assert retros
     body = retros[0].read_text()
     assert "builder-1" in body and "scribe-1" in body
+
+
+def test_fleet_run_prints_verify_receipt(tmp_path, capsys):
+    repo = _fleet_repo(tmp_path)
+    cfg = load_config(repo)
+    rc = run_fleet(cfg, ".kelix/fleet.toml", max_iterations=2)
+    assert rc == 0
+
+    out = capsys.readouterr().out
+    assert "fleet run complete" in out
+    assert "verify: true exit 0" in out
+    assert "verified commits:" in out
+    assert "claim FT" in out
+
+    retros = list((cfg.kelix_dir / "runs").glob("fleet-*.md"))
+    assert retros
+    body = retros[0].read_text()
+    assert "### Receipt" in body
+    assert "verify: `true` exit 0" in body
+    assert "- claims:" in body
 
 
 def test_fleet_metrics_aggregation(tmp_path):
