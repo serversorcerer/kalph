@@ -256,7 +256,7 @@ Every task below names its phase and the REQ it covers in `details:`.
 
 ### Phase P-PROOF (docs + self-referential proof)
 
-- [ ] PC12: docs/planning.md + init template | priority: 62 | status: ready | by: owner | deps: PC8, PC11 | phase: P-PROOF | req: REQ-P1, REQ-P2
+- [x] PC12: docs/planning.md + init template | priority: 62 | status: done | by: owner | deps: PC8, PC11 | phase: P-PROOF | req: REQ-P1, REQ-P2
   rationale: [P-PROOF/REQ-P1+P2] the hierarchy is only real if a stranger can adopt it tonight
   details: write docs/planning.md — the plan-first flow (GOAL.md ->
   kelix plan -> review/promote -> kelix run), roadmap -> phase -> task

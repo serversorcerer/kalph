@@ -178,6 +178,37 @@ def test_init_does_not_overwrite_existing_goal_md(tmp_path):
     assert goal.read_text(encoding="utf-8") == "custom goal\n"
 
 
+def test_init_writes_roadmap_template(tmp_path):
+    from kelix.cli import ROADMAP_TEMPLATE, cmd_init
+
+    class Args:
+        path = str(tmp_path)
+        from_spec = ""
+
+    cmd_init(Args())
+    roadmap = tmp_path / ".kelix" / "roadmap.md"
+    assert roadmap.is_file()
+    text = roadmap.read_text(encoding="utf-8")
+    assert text == ROADMAP_TEMPLATE
+    assert "## Milestone M1" in text
+    assert "REQ-EX1" in text
+
+
+def test_init_does_not_overwrite_existing_roadmap(tmp_path):
+    from kelix.cli import cmd_init
+
+    class Args:
+        path = str(tmp_path)
+        from_spec = ""
+
+    kelix = tmp_path / ".kelix"
+    kelix.mkdir()
+    roadmap = kelix / "roadmap.md"
+    roadmap.write_text("custom roadmap\n", encoding="utf-8")
+    cmd_init(Args())
+    assert roadmap.read_text(encoding="utf-8") == "custom roadmap\n"
+
+
 def test_context_share_controls_total_data_budget(tmp_path):
     (tmp_path / "kelix.toml").write_text(
         """
