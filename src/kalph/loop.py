@@ -174,6 +174,7 @@ class Runner:
 
     def _gather_context(self, workdir: Path) -> dict:
         from .memory import episode_digest, skills_digest
+        from .state import STATE_FILE, load_state
 
         mailbox = ""
         mailbox_dir = self.cfg.kalph_dir / "fleet" / "mailbox"
@@ -182,7 +183,14 @@ class Runner:
             mailbox = "\n---\n".join(
                 p.read_text(encoding="utf-8") for p in notes[-5:]
             )
+
+        state = ""
+        kalph_dir = self.cfg.kalph_dir
+        if load_state(kalph_dir) is not None:
+            state = (kalph_dir / STATE_FILE).read_text(encoding="utf-8")
+
         return {
+            "state": state,
             "memory_digest": episode_digest(self.cfg),
             "skills": skills_digest(self.cfg, workdir),
             "mailbox": mailbox,

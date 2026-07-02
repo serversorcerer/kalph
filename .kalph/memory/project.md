@@ -51,6 +51,10 @@ Durable facts about this repo for future iterations.
   iterations) and writes `.kalph/STATE.md` once in `_finish` before the
   retrospective checkpoint — not mid-iteration. STATE.md is intentionally absent
   from `RUNNER_BOOKKEEPING` excludes so the retrospective commit ships it.
+  The prompt's first data slot is `{{STATE}}` in `prompt.py` (budget
+  `[memory].state_max_chars`, default 1200); `loop.py` `_gather_context` loads
+  via `load_state()` and injects the file text, falling back to
+  "(no state file — flat-backlog mode)" when absent.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

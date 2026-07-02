@@ -49,7 +49,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   after a mock run, STATE.md exists on the run branch, counts match, and a
   no-diff run does not create bogus progress.
 
-- [ ] PC3: STATE.md is the prompt's first data slot | priority: 93 | status: ready | by: owner | deps: PC2
+- [x] PC3: STATE.md is the prompt's first data slot | priority: 93 | status: done | by: owner | deps: PC2
   rationale: [P-SPINE/REQ-S3] orientation must be the first thing a fresh agent reads
   details: in src/kalph/prompt.py add a {{STATE}} slot rendered before the
   episode digest, budgeted (default 1200 chars, truncate tail), filled from

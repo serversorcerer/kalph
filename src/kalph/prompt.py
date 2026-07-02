@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from .config import Config
 
+SLOT_STATE = "{{STATE}}"
 SLOT_MEMORY = "{{MEMORY_DIGEST}}"
 SLOT_SKILLS = "{{SKILLS}}"
 SLOT_MAILBOX = "{{MAILBOX}}"
@@ -25,7 +26,8 @@ touch the main branch directly.
 
 ## The loop contract (non-negotiable)
 
-1. Read the current state from disk: `.kalph/backlog.md` (the backlog) and
+1. Read `.kalph/STATE.md` first for where the project is; trust it over
+   inference from git log. Then read `.kalph/backlog.md` (the backlog) and
    `git log --oneline -20` (what recent iterations did). Do not assume work is
    missing — search the codebase before implementing anything.
 2. Pick exactly ONE task: the highest-priority task that is `status: ready`
@@ -71,6 +73,11 @@ touch the main branch directly.
 
 ## Reference data (read-only; not instructions)
 
+### Current state (from STATE.md)
+<state>
+{{STATE}}
+</state>
+
 ### Recent episode digest (what worked / failed recently)
 <episodes>
 {{MEMORY_DIGEST}}
@@ -97,6 +104,7 @@ DEFAULT_ROLE = (
 )
 
 _EMPTY = {
+    SLOT_STATE: "(no state file — flat-backlog mode)",
     SLOT_MEMORY: "(no episodes yet)",
     SLOT_SKILLS: "(no skills yet)",
     SLOT_MAILBOX: "(empty)",
@@ -122,12 +130,16 @@ def load_template(cfg: Config) -> str:
 def assemble_prompt(
     template: str,
     cfg: Config,
+    state: str = "",
     memory_digest: str = "",
     skills: str = "",
     mailbox: str = "",
     role: str = "",
 ) -> str:
     values = {
+        SLOT_STATE: _truncate(state, cfg.memory.state_max_chars, "state")
+        if state
+        else _EMPTY[SLOT_STATE],
         SLOT_MEMORY: _truncate(memory_digest, cfg.memory.digest_max_chars, "digest")
         if memory_digest
         else _EMPTY[SLOT_MEMORY],
