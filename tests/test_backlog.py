@@ -46,6 +46,16 @@ def test_round_trip():
     assert again == tasks
 
 
+def test_parse_multiline_details():
+    text = """\
+- [ ] T1: demo | priority: 50 | status: ready | by: owner
+  details: create src/kalph/foo.py with helpers,
+  round-trip test in tests/test_foo.py
+"""
+    tasks = parse_backlog(text)
+    assert "tests/test_foo.py" in tasks[0].notes["details"]
+
+
 def test_select_next_priority_and_owner():
     tasks = parse_backlog(SAMPLE_BACKLOG)
     assert select_next(tasks).id == "KB1"

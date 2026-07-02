@@ -90,6 +90,19 @@ def cmd_init(args) -> int:
     return 0
 
 
+def cmd_lint(args) -> int:
+    from .lint import format_finding, lint_repo
+
+    root = Path(args.path).resolve()
+    findings = lint_repo(root)
+    if not findings:
+        print("lint: clean")
+        return 0
+    for finding in findings:
+        print(f"lint: {format_finding(finding)}", file=sys.stderr)
+    return 1
+
+
 def cmd_plan(args) -> int:
     from .loop import LoopError
     from .plan import PlanRunner
@@ -127,7 +140,7 @@ def cmd_plan(args) -> int:
 
     if result.findings:
         for line in result.findings:
-            print(f"lint: {line}", file=sys.stderr)
+            print(f"lint: {line}", file=sys.stderr)  # pre-formatted in plan.py
     if result.iteration and result.iteration.failure:
         print(f"error: {result.iteration.failure}", file=sys.stderr)
     return 1
@@ -214,6 +227,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--path", default=".")
     p.add_argument("--from-spec", default="", help="seed backlog from .kiro/specs/<name>/tasks.md")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("lint", help="check backlog tasks against the input contract")
+    p.add_argument("--path", default=".")
+    p.set_defaults(func=cmd_lint)
 
     p = sub.add_parser("plan", help="draft roadmap and backlog from a goal")
     p.add_argument("--path", default=".")

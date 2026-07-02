@@ -90,6 +90,16 @@ Durable facts about this repo for future iterations.
   `PLAN COMPLETE` sentinel on draft. Interview uses `PLANNING_INTERVIEW_TEMPLATE`.
   Phase files (QUESTIONS.md, CONTEXT.md) live on `cfg.root`, not ephemeral
   worktrees. Tests in `tests/test_plan.py`.
+- Backlog lint lives in `src/kalph/lint.py` (`Finding`, `lint_backlog`,
+  `lint_repo`, `validate_plan`, `format_finding`). `lint_backlog` checks
+  non-done tasks (or `scope="proposed"` for kalph draft tasks only): missing
+  details, no acceptance signal (test/assert/exit/file path), unfalsifiable
+  wording without metric, dangling/cyclic deps, title>80 chars, multiple
+  deliverables (` and then ` in details, ignoring quoted/parenthetical rule
+  text). `validate_plan` also checks roadmap parse, REQ coverage, proposed-only
+  kalph tasks, and planning-only file changes. CLI: `kalph lint` (exit 1 on
+  findings). Tests in `tests/test_lint.py`. `parse_backlog` accumulates
+  continuation lines into multi-line notes.
 - OWNER PRINCIPLE (communication): good input in, good output out — slop in,
   slop out. All owner-facing text this project produces (backlog tasks, PRD
   templates, docs, prompts, retrospectives) must be precise and legible to

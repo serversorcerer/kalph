@@ -10,6 +10,7 @@ TASK_LINE = re.compile(
 )
 TRAILING_FIELD = re.compile(r" \| (deps|phase|req): (.+?)(?= \| (?:deps|phase|req): |$)")
 NOTE_LINE = re.compile(r"^  (rationale|details|diagnosis): (.*)$")
+CONTINUATION_LINE = re.compile(r"^  (.+)$")
 
 
 @dataclass
@@ -46,6 +47,7 @@ def parse_backlog(text: str) -> list[Task]:
     """Parse backlog markdown into tasks. Malformed lines are skipped."""
     tasks: list[Task] = []
     current: Task | None = None
+    last_note_key = ""
 
     for raw in text.splitlines():
         line = raw.rstrip()
@@ -69,12 +71,20 @@ def parse_backlog(text: str) -> list[Task]:
                 req=req,
             )
             tasks.append(current)
+            last_note_key = ""
             continue
 
         note_match = NOTE_LINE.match(line)
         if note_match and current is not None:
             key, value = note_match.groups()
             current.notes[key] = value
+            last_note_key = key
+            continue
+
+        cont_match = CONTINUATION_LINE.match(line)
+        if cont_match and current is not None and last_note_key:
+            extra = cont_match.group(1)
+            current.notes[last_note_key] = f"{current.notes[last_note_key]}\n{extra}"
 
     return tasks
 

@@ -479,7 +479,9 @@ class PlanRunner:
                 parts.append(f"missing {PLAN_COMPLETE_SENTINEL!r} sentinel")
             if not rec.validated:
                 parts.append("plan validation failed")
-                result.findings = [f"{f.rule}: {f.message}" for f in findings]
+                from .lint import format_finding
+
+                result.findings = [format_finding(f) for f in findings]
             rec.failure = "; ".join(parts)
             result.status = "validation_failed" if findings else "error"
         else:

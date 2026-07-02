@@ -123,7 +123,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   adapter scripts: TTY path via monkeypatched isatty+input, file path
   round-trip (unanswered -> exit with file; answered -> draft produced).
 
-- [ ] PC15: plan validation + kalph lint | priority: 87 | status: ready | by: owner | deps: PC4
+- [x] PC15: plan validation + kalph lint | priority: 87 | status: done | by: owner | deps: PC4
   rationale: [P-ONRAMP/REQ-O2+O3] a draft plan must be machine-checked against the input contract; slop is rejected with specifics
   details: add src/kalph/lint.py with lint_backlog(tasks) -> list[Finding]
   (finding: task_id, rule, message). Rules: missing details, details with no
