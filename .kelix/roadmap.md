@@ -177,35 +177,103 @@ better at building because it studies its own iterations. Everything stays
 inside the safety model: Kelix proposes changes to itself as reviewable
 diffs; it NEVER self-applies them.
 
-Sketch (decomposed via `kelix plan` interviewing the owner once P-ONRAMP
-ships — the onramp's first real use is planning the milestone after it):
+Ship criterion (owner): one full self-tuning cycle — ledger rows from real
+runs, an owner-invoked diagnosis, a tuning PR merged or closed with recorded
+reason, and post-merge grading in the rollup. Skill distillation may ship
+in-milestone but is not the gate.
 
-- Phase T-METRICS: an outcome ledger per iteration — verified rate, retry
-  count, tokens/duration, circuit-breaker causes, lint findings on
-  agent-written backlog edits — aggregated across runs into
-  `.kelix/memory/loop-metrics.json` (runner-owned, human-readable).
-- Phase T-DIAGNOSE: a periodic self-review iteration reads the ledger and
-  transcripts of failed iterations and writes a diagnosis: which prompt
-  sections, policies, or budgets correlate with failure.
-- Phase T-PROPOSE: Kelix opens a PR against its own prompt template,
-  denylist, budgets, or selection weights, with the metric evidence in the
-  PR body and a predicted improvement. Owner merges or closes — the same
-  gate as any code change. A merged proposal's prediction is checked
-  against the next runs' ledger and the result is recorded (the loop grades
-  its own homework).
-- Phase T-SKILLS: skill learning that actually fires (D17). Evidence: in
-  ~20 live v0.1 iterations the prompt's acquisition rule produced zero
-  skills. Fix the mechanism, not the wording: at retrospective time the
-  runner runs a distillation pass over the run's verified episodes (which
-  tasks took retries, what unblocked them) and writes candidate skills as
-  `proposed` artifacts the owner can keep or delete; the ledger tracks
-  skill injections (via the context manifest) vs. task outcomes so a
-  skill's efficacy is a number, not a feeling. Plumbing stays frozen —
-  same format, same directories.
-- Staged next: autonomous roadmapping (v0.5 — Kelix drafts the next
-  milestone from repo observation; owner edits instead of authors), then
-  self-reviewing fleet chains (v0.6 — review/fix/re-verify cycles between
-  agents until merge-ready, owner merges).
+Non-goals for v0.3: no token/cost fields populated (schema carries
+`tokens: null` plus a documented adapter hook only); no auto-run diagnosis
+mid-loop; Kelix never edits backlog, STATE.md, or roadmap in propose mode;
+no autonomous roadmapping (v0.5) or self-reviewing fleet chains (v0.6).
+
+Sequencing (owner): strict waterfall — T-METRICS → T-DIAGNOSE → T-PROPOSE →
+T-SKILLS. Owner decisions per phase live in
+`.kelix/phases/T-*/CONTEXT.md`.
+
+Staged next: autonomous roadmapping (v0.5 — Kelix drafts the next milestone
+from repo observation; owner edits instead of authors), then self-reviewing
+fleet chains (v0.6 — review/fix/re-verify cycles between agents until
+merge-ready, owner merges).
+
+### Phase T-METRICS — the outcome ledger
+
+Outcome: every iteration and fleet run leaves a measurable row in a
+runner-maintained rollup; episodes.jsonl stays the raw stream.
+
+- REQ-TM1: each iteration writes a ledger row: run_id, iteration index,
+  task_id (when known), verified (bool|null), retry_count (same-task attempts
+  within the run before this row), duration_s, failure string, circuit_breaker
+  cause when status is circuit_breaker, agent_id, fleet_id (empty for solo).
+- REQ-TM2: `.kelix/memory/loop-metrics.json` is a human-readable JSON rollup
+  (schema_version, iterations[], fleet_summaries[], proposal_outcomes[]) appended
+  at retrospective time; runner-owned, gitignored like episodes.jsonl.
+- REQ-TM3: `.kelix/memory/episodes.jsonl` remains the raw append-only stream;
+  the rollup is written in write_retrospective (or immediately after), never
+  replacing episodes.
+- REQ-TM4: ledger schema includes `tokens: null` on every row plus a documented
+  optional adapter hook for future token accounting — no token fields populated
+  in v0.3.
+- REQ-TM5: after any iteration that dirties `.kelix/backlog.md`, lint only
+  kelix-authored `status: proposed` tasks (`by: kelix`); store `{rule_id: count}`
+  on that iteration's ledger row as backlog_lint.
+- REQ-TM6: fleet runs aggregate into the same ledger — per-iteration rows carry
+  agent_id and fleet_id; at fleet completion write one fleet-level summary row
+  (verified rate, iteration count, breaker trips) into fleet_summaries[].
+
+### Phase T-DIAGNOSE — periodic self-review
+
+Outcome: the owner can invoke a diagnosis pass that correlates ledger data
+with failed-iteration transcripts — never auto-fired mid-loop.
+
+- REQ-TD1: `kelix diagnose` (--run-id repeatable, --last N) runs one adapter
+  iteration whose deliverable is a diagnosis markdown file under
+  `.kelix/memory/`; the runner never calls it from kelix run.
+- REQ-TD2: default run scope is the last 3 runs with any failure in the ledger;
+  --run-id and --last N override; only failed iterations' transcripts are read,
+  capped by a configurable char budget (`[loop] diagnose_transcript_chars`).
+- REQ-TD3: the diagnosis names which prompt sections, policies, or config
+  budgets correlate with failure modes seen in the scoped ledger rows, with
+  citations to run_id/iteration indices.
+
+### Phase T-PROPOSE — reviewable tuning PRs
+
+Outcome: Kelix opens a PR against its own policy surface with metric evidence;
+the owner merges or closes; merged proposals are graded against subsequent runs.
+
+- REQ-TP1: `kelix propose` runs on a dedicated branch and may edit only the
+  Kelix-owned policy surface: prompt templates under `.kelix/prompts/`,
+  security denylist defaults/extras, config default values and documented
+  `[memory]`/`[loop]` keys in kelix.toml template — never backlog, STATE.md, or
+  roadmap.
+- REQ-TP2: delivery opens a PR via existing pr.py with a structured body:
+  metric excerpts from loop-metrics.json, diagnosis file reference when
+  provided, predicted improvement, and the diff restricted to REQ-TP1 paths.
+  NOTE: Milestone V ledger (KV1) must re-judge pr.py row-by-row — this gives
+  pr.py a live receipt that conflicts with the predetermined SCRAP in
+  `.kelix/phases/V-CUT/CONTEXT.md`.
+- REQ-TP3: proposal_outcomes[] in loop-metrics.json records each merged or
+  closed proposal: merge sha or close reason, prediction text, grade
+  (improved|regressed|inconclusive) by comparing verified rate and retry/breaker
+  counts in the last-5-runs window before merge vs the next-5 after; grade is
+  inconclusive when fewer than 3 post-merge runs exist.
+
+### Phase T-SKILLS — skill distillation that fires
+
+Outcome: the runner distills candidate skills from verified episodes; efficacy
+is a number in the ledger, not a feeling. Skill plumbing format stays frozen.
+
+- REQ-TS1: after write_retrospective the runner invokes the configured adapter
+  with a fixed distillation prompt over the run's transcripts and episode
+  outcomes; emit 1–3 candidate skills per run.
+- REQ-TS2: candidates land at `.kelix/skills/_proposed/<name>/SKILL.md`
+  (agentskills.io format); list_skills and the injection digest exclude
+  `_proposed/` until the owner promotes by moving into `.kelix/skills/<name>/`.
+- REQ-TS3: each iteration ledger row records skills_injected[] parsed from the
+  context manifest's skills slot sources plus the iteration outcome.
+- REQ-TS4: loop-metrics.json maintains per-skill rolling verified_rate_with vs
+  verified_rate_without over matched tasks (same task_id or req where skill
+  was/wasn't injected).
 
 ## Milestone v0.4 — Kelix for everyone (agent-agnostic, audacious, honest)
 

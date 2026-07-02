@@ -280,7 +280,7 @@ Every task below names its phase and the REQ it covers in `details:`.
   selection, phase gate auto-advanced P-GATE -> P-PROOF mid-run; transcripts
   in .kelix/runs/20260702-104227/.
 
-- [ ] PC23: plan milestone v0.3 with kelix plan itself | priority: 58 | status: ready | by: owner | deps: PC13, PC14b, PC15
+- [x] PC23: plan milestone v0.3 with kelix plan itself | priority: 58 | status: done | by: owner | deps: PC13, PC14b, PC15
   rationale: [P-PROOF] the onramp's first real use: the self-tuning-loop milestone is decomposed by the interview flow, not by hand
   details: run `kelix plan --goal-file .kelix/roadmap.md` scoped to the
   "Milestone v0.3" section: the interview questions go to the owner, the
@@ -288,6 +288,185 @@ Every task below names its phase and the REQ it covers in `details:`.
   proposed tasks passing kelix lint. Evidence in DECISIONS.md: questions
   asked, answers, lint-clean draft. Owner promotes tasks to ready to open
   the milestone. This closes v0.2 through the phase gate.
+
+## Milestone v0.3 — The Self-Tuning Loop
+
+Orient: `.kelix/roadmap.md` Milestone v0.3 → phases T-METRICS … T-SKILLS
+(waterfall). Owner decisions: `.kelix/phases/T-*/CONTEXT.md`. Ship gate: one
+full self-tuning cycle (ST19); skill tasks are in-milestone but not the gate.
+All tasks below are `status: proposed` until the owner promotes them.
+
+### Phase T-METRICS — the outcome ledger
+
+- [ ] ST1: loop-metrics schema module | priority: 57 | status: proposed | by: kelix | phase: T-METRICS | req: REQ-TM2, REQ-TM4
+  details: add src/kelix/metrics.py with dataclasses LoopMetrics (schema_version,
+  iterations[], fleet_summaries[], proposal_outcomes[]), IterationLedgerRow
+  (run_id, iteration, task_id, verified, retry_count, duration_s, failure,
+  circuit_breaker_cause, agent_id, fleet_id, backlog_lint dict, skills_injected
+  list, tokens always null), FleetSummaryRow, ProposalOutcome. Document the
+  optional token adapter hook in module docstring (callable signature, not
+  wired). load_metrics(path)->LoopMetrics|empty and save_metrics(path, m)
+  write indented JSON. tests/test_metrics.py: round-trip, corrupt file tolerance,
+  tokens field null on rows.
+
+- [ ] ST2: per-iteration ledger row capture | priority: 56 | status: proposed | by: kelix | deps: ST1 | phase: T-METRICS | req: REQ-TM1
+  details: extend src/kelix/loop.py Runner to accumulate IterationLedgerRow per
+  iteration: run_id, rec.index, task_id parsed from rationale (reuse
+  TASK_FROM_RATIONALE_RE), rec.verified, rec.duration_s, rec.failure,
+  circuit_breaker_cause when result.status becomes circuit_breaker, agent_id
+  from self.agent_id, fleet_id from optional constructor arg (empty for solo).
+  retry_count = count of prior rows in this run with the same task_id. Hold rows
+  on RunResult or Runner until retrospective. tests/test_loop.py: mock run with
+  two attempts on same task id → second row retry_count==1.
+
+- [ ] ST3: backlog lint on kelix proposed edits | priority: 55 | status: proposed | by: kelix | deps: ST1, PC15 | phase: T-METRICS | req: REQ-TM5
+  details: after each iteration, if .kelix/backlog.md is dirty vs pre-iteration
+  snapshot: parse backlog, filter tasks with by=kelix and status=proposed that
+  were added or whose details/rationale/deps changed, run lint_backlog on that
+  subset only. Attach {rule_id: count} to the current iteration's ledger row as
+  backlog_lint (aggregate Finding.rule counts). tests/test_metrics.py or
+  test_loop.py: fixture agent appends a slop kelix proposed task → row carries
+  missing-details rule count ≥1.
+
+- [ ] ST4: metrics rollup at retrospective | priority: 54 | status: proposed | by: kelix | deps: ST2, ST3 | phase: T-METRICS | req: REQ-TM2, REQ-TM3
+  details: add append_run_metrics(cfg, rows, fleet_summary=None) in metrics.py;
+  call from loop.py _finish immediately after write_retrospective merges this
+  run's rows into .kelix/memory/loop-metrics.json (create if absent). Add
+  .kelix/memory/loop-metrics.json to RUNNER_BOOKKEEPING in gitutil.py. Do not
+  modify episodes.jsonl write path. tests/test_loop.py: mock run → file exists
+  with one iteration object matching the run; second run appends without
+  clobbering.
+
+- [ ] ST5: fleet metrics aggregation | priority: 53 | status: proposed | by: kelix | deps: ST4 | phase: T-METRICS | req: REQ-TM6
+  details: in src/kelix/fleet.py pass fleet_id into Runner (e.g. fleet.toml
+  name or hash) and agent_id per agent. After fleet run completes, compute
+  FleetSummaryRow (fleet_id, run_ids[], verified_rate, iteration_count,
+  breaker_trips) and append via append_run_metrics. tests/test_fleet.py: two-
+  agent mock fleet → ledger rows have distinct agent_id, same fleet_id, plus
+  one fleet_summaries[] entry.
+
+- [ ] ST6: loop-metrics documentation | priority: 52 | status: proposed | by: kelix | deps: ST5 | phase: T-METRICS | req: REQ-TM2, REQ-TM4
+  details: add "Outcome ledger" section to docs/memory-and-skills.md documenting
+  loop-metrics.json schema, episodes.jsonl vs rollup distinction, backlog_lint
+  field, tokens:null hook, fleet_summaries and proposal_outcomes arrays.
+  Acceptance: section names both files; pytest -q unchanged.
+
+### Phase T-DIAGNOSE — periodic self-review
+
+- [ ] ST7: diagnose config keys | priority: 51 | status: proposed | by: kelix | deps: ST4 | phase: T-DIAGNOSE | req: REQ-TD2
+  details: extend LoopConfig in config.py with diagnose_transcript_chars: int =
+  50000 and diagnose_default_runs: int = 3; parse from [loop] in kelix.toml;
+  document in CONFIG_TEMPLATE comment. tests/test_config.py: defaults and
+  override round-trip.
+
+- [ ] ST8: kelix diagnose command skeleton | priority: 50 | status: proposed | by: kelix | deps: ST7 | phase: T-DIAGNOSE | req: REQ-TD1
+  details: add src/kelix/diagnose.py and cmd_diagnose in cli.py. Flags: --run-id
+  (repeatable), --last N, --diagnosis-file optional path default
+  .kelix/memory/diagnosis-<timestamp>.md. Select runs: --run-id list, else last
+  N runs from .kelix/runs/ that have ≥1 failed ledger row (load loop-metrics.json
+  joined to run ids), default N=diagnose_default_runs. Never import from loop.py
+  run path. tests/test_diagnose.py: run selection fixture with 5 runs, 2 failed.
+
+- [ ] ST9: failed-transcript loader with budget | priority: 49 | status: proposed | by: kelix | deps: ST8 | phase: T-DIAGNOSE | req: REQ-TD2
+  details: in diagnose.py load_failed_transcripts(cfg, run_ids, ledger_rows) →
+  str: for each failed iteration in scope read
+  .kelix/runs/<run_id>/transcript-<n>.txt (or actual transcript naming from
+  loop.py); concatenate with headers; stop when diagnose_transcript_chars
+  exceeded, append "[... truncated to N chars]" marker. Skip missing files
+  gracefully. tests/test_diagnose.py: 3 transcripts, budget 500 → truncation
+  marker present.
+
+- [ ] ST10: diagnose agent iteration | priority: 48 | status: proposed | by: kelix | deps: ST9 | phase: T-DIAGNOSE | req: REQ-TD1, REQ-TD3
+  details: add DIAGNOSE_TEMPLATE in prompt.py; cmd_diagnose runs one adapter
+  iteration (worktree isolation like plan) with ledger JSON excerpt + ST9
+  transcripts; agent writes only the diagnosis markdown file; validate output
+  exists and contains "## Findings" and at least one run_id citation. Print
+  path on success. tests/test_diagnose.py: mock adapter writes file → exit 0;
+  assert loop.py has zero calls to cmd_diagnose (grep test or import guard).
+
+### Phase T-PROPOSE — reviewable tuning PRs
+
+- [ ] ST11: propose path allowlist guard | priority: 47 | status: proposed | by: kelix | deps: ST4 | phase: T-PROPOSE | req: REQ-TP1
+  details: add src/kelix/propose.py with PROPOSE_ALLOWED_PREFIXES tuple:
+  .kelix/prompts/, src/kelix/security.py (denylist constants only — document
+  which lines), src/kelix/config.py (defaults + CONFIG_TEMPLATE string),
+  .kelix/kelix.toml template keys for [memory] and [loop] only. validate_propose_diff(
+  changed_paths)->list[str] returns violations for any path outside allowlist or
+  blocked paths (backlog, STATE, roadmap). tests/test_propose.py: allowed vs
+  forbidden paths.
+
+- [ ] ST12: kelix propose command | priority: 46 | status: proposed | by: kelix | deps: ST11, ST10 | phase: T-PROPOSE | req: REQ-TP1
+  details: cmd_propose in cli.py: create branch kelix/propose-<run_id>, one
+  adapter iteration with PROPOSE_TEMPLATE in prompt.py (inputs: loop-metrics
+  excerpt, optional --diagnosis-file, predicted improvement line required in
+  output metadata). Post-iteration run validate_propose_diff on git diff;
+  reject with stderr listing violations. Write .kelix/memory/proposal-<id>.json
+  sidecar (prediction text, touched files). tests/test_propose.py: mock agent
+  edits prompt file → pass; mock edits backlog → fail validation.
+
+- [ ] ST13: propose opens PR via pr.py | priority: 45 | status: proposed | by: kelix | deps: ST12, KB6 | phase: T-PROPOSE | req: REQ-TP2
+  details: after successful propose iteration, call open_pr from pr.py (or extend
+  build_pr_body with propose mode) to open a PR with body sections: ## Metric
+  evidence (verbatim stats from loop-metrics.json), ## Diagnosis (link/path),
+  ## Predicted improvement, ## Changed policy surface (file list). Add --no-pr
+  flag for tests. tests/test_propose.py: mock gh path or stub open_pr → called
+  with structured body containing "Metric evidence". Note in commit message:
+  live receipt for KV1 pr.py re-judgment.
+
+- [ ] ST14: proposal outcome grading | priority: 44 | status: proposed | by: kelix | deps: ST13 | phase: T-PROPOSE | req: REQ-TP3
+  details: add record_proposal_outcome(metrics, *, merge_sha|close_reason,
+  prediction, merged_at_run_window) and grade_proposal(metrics, proposal_id) in
+  metrics.py: slice ledger rows into 5 runs before merge vs 5 after; compare
+  verified rate and mean retry_count + breaker rate; emit
+  improved|regressed|inconclusive (<3 post-merge runs). CLI kelix propose
+  --record-merge <sha> or kelix metrics grade-proposal (subcommand) for owner
+  use. tests/test_metrics.py: fixture metrics → improved and inconclusive cases.
+
+### Phase T-SKILLS — skill distillation
+
+- [ ] ST15: exclude _proposed from skills digest | priority: 43 | status: proposed | by: kelix | deps: ST4 | phase: T-SKILLS | req: REQ-TS2
+  details: in memory.py list_skills skip any path under .kelix/skills/_proposed/.
+  Promotion = owner moves folder to .kelix/skills/<name>/ (document in
+  memory-and-skills.md one line). tests/test_memory.py: skill only under
+  _proposed → skills_digest empty; after move → appears.
+
+- [ ] ST16: distillation pass after retrospective | priority: 42 | status: proposed | by: kelix | deps: ST15 | phase: T-SKILLS | req: REQ-TS1
+  details: add DISTILLATION_TEMPLATE in prompt.py; after write_retrospective in
+  loop.py _finish (and fleet equivalent), when [memory].distill_skills=true
+  (default true), invoke adapter once with prompt built from this run's
+  transcripts + episode outcomes (verified, failures, retries). Agent may write
+  1–3 dirs under .kelix/skills/_proposed/<name>/SKILL.md only; validate
+  agentskills.io frontmatter. Cap at 3 candidates; ignore extras with warning.
+  tests/test_loop.py: mock distillation script writes one SKILL.md → file exists.
+
+- [ ] ST17: skills_injected on ledger rows | priority: 41 | status: proposed | by: kelix | deps: ST16, ST2 | phase: T-SKILLS | req: REQ-TS3
+  details: when writing context-<n>.json in loop.py, copy skills-slot manifest
+  entries' source paths into IterationLedgerRow.skills_injected (basename skill
+  name). Persist through ST4 rollup. tests/test_loop.py: manifest lists
+  .kelix/skills/foo/SKILL.md → row skills_injected contains "foo".
+
+- [ ] ST18: skill efficacy rollup | priority: 40 | status: proposed | by: kelix | deps: ST17 | phase: T-SKILLS | req: REQ-TS4
+  details: extend LoopMetrics with skill_efficacy: dict[str, {with_rate,
+  without_rate, matched_tasks}] computed in append_run_metrics from all
+  iteration rows: for each skill name, partition rows by whether skill in
+  skills_injected; compute verified_rate for each partition (only rows with
+  task_id present). Update on each retrospective append. tests/test_metrics.py:
+  fixture rows → with_rate > without_rate for injected skill.
+
+- [ ] ST19: v0.3 self-tuning cycle proof | priority: 39 | status: proposed | by: kelix | deps: ST14 | phase: T-PROPOSE | req: REQ-TP2, REQ-TP3
+  details: dogfood the ship gate on this repo: (1) kelix run ≥3 iterations
+  producing loop-metrics.json rows from real adapter or mock with verify; (2)
+  kelix diagnose on those runs → diagnosis file; (3) kelix propose with metric
+  evidence → owner merges or closes with reason recorded via ST14; (4) after
+  ≥3 post-merge runs or documented inconclusive, proposal_outcomes[] populated.
+  Record run ids and paths in DECISIONS.md as D22 evidence. ST15–ST18 may still
+  be open — not required for this task.
+
+- [ ] ST20: skill distillation documentation | priority: 38 | status: proposed | by: kelix | deps: ST18 | phase: T-SKILLS | req: REQ-TS1, REQ-TS2, REQ-TS4
+  details: extend docs/memory-and-skills.md with "Skill distillation" section:
+  runner-owned pass after retrospective, _proposed/ promotion flow, efficacy
+  fields in loop-metrics.json. Link from docs/planning.md quick reference table
+  (kelix diagnose, kelix propose as secondary ops). Acceptance: pytest -q pass.
 
 ## Milestone v0.4 — Kelix for everyone
 
