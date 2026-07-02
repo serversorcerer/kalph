@@ -9,7 +9,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
 
 ## Tasks
 
-- [ ] KB1: backlog parser module | priority: 90 | status: ready | by: owner
+- [x] KB1: backlog parser module | priority: 90 | status: done | by: owner
   rationale: the runner, fleet claims, and status view all need structured backlog access
   details: create src/kalph/backlog.py with a Task dataclass (id, title, priority int,
   status, by, deps list, notes) and functions parse_backlog(text) -> list[Task],
@@ -20,7 +20,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   round-trip, selection order (priority, owner-beats-kalph, deps blocking), and
   malformed-line tolerance.
 
-- [ ] KB2: memory module tests | priority: 80 | status: ready | by: owner
+- [x] KB2: memory module tests | priority: 80 | status: done | by: owner
   rationale: memory (episodes, skills, retrospective) shipped in the loop commit without direct unit tests
   details: create tests/test_memory.py testing src/kalph/memory.py: record_episode +
   load_episodes round-trip and corrupt-line tolerance; episode_digest contains rationale
@@ -30,7 +30,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   retrospective.md with status and a "For the owner" section when failures exist.
   Use tmp_path fixtures; do not touch the real .kalph directory.
 
-- [ ] KB3: security module tests | priority: 75 | status: ready | by: owner
+- [x] KB3: security module tests | priority: 75 | status: done | by: owner
   rationale: the scrubber and command policy are safety-critical and must have regression tests before Phase 6 relies on them
   details: create tests/test_security.py testing src/kalph/security.py: scrub() redacts
   a GitHub token (ghp_ + 30 alphanumerics), a Kiro key (ksk_...), an AWS AKIA key, a
@@ -40,7 +40,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
   "sudo rm x"; allows "git status", "pytest -q", "git push origin kalph/run-1";
   deny_extra patterns are honored; allow_only mode blocks anything not prefixed.
 
-- [ ] KB4: prioritization rubric doc | priority: 70 | status: ready | by: owner
+- [x] KB4: prioritization rubric doc | priority: 70 | status: done | by: owner
   rationale: priority logic must be legible (mission requirement), documented before autonomy features build on it
   details: write docs/prioritization.md documenting the scoring rubric: owner intent
   always first (owner tasks outrank kalph-proposed ones), then correctness/broken
