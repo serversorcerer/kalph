@@ -621,7 +621,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 
 ### Phase P-AUDIT — Audacity audit
 
-- [ ] KE16: proof docs Kalph rename | priority: 77 | status: ready | by: owner | phase: P-AUDIT | req: REQ-U1
+- [x] KE16: proof docs Kalph rename | priority: 77 | status: done | by: owner | phase: P-AUDIT | req: REQ-U1
   details: rename Kalph→Kelix throughout docs/proof/* (final-report.md,
   dogfood-retrospective.md, fleet-*.md, injection-drill-backlog.diff prose).
   Add one-line provenance at top of docs/proof/final-report.md: notes former
