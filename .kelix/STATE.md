@@ -4,7 +4,7 @@
 - phase: T-METRICS
 - current_task: selecting
 - last_task: ST5
-- last_verified_commit: 70c1a4a
+- last_verified_commit: bc1e6f0
 - done: 33
 - total: 101
 - blockers:
