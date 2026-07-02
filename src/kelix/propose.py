@@ -176,6 +176,8 @@ class ProposeResult:
     proposal_id: str = ""
     run_id: str = ""
     branch: str = ""
+    workdir: Path = Path()
+    diagnosis_file: str = ""
     sidecar_path: Path = Path()
     status: str = "running"  # completed | validation_failed | error
     iteration: ProposeIteration | None = None
@@ -247,6 +249,8 @@ class ProposeRunner:
 
         workdir, branch = self._prepare_workdir(run_id)
         result.branch = branch
+        result.workdir = workdir
+        result.diagnosis_file = diagnosis_rel
 
         metrics_text = metrics_excerpt(cfg)
         prompt = assemble_propose_prompt(

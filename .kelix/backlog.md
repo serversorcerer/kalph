@@ -404,7 +404,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   sidecar (prediction text, touched files). tests/test_propose.py: mock agent
   edits prompt file → pass; mock edits backlog → fail validation.
 
-- [ ] ST13: propose opens PR via pr.py | priority: 45 | status: ready | by: owner | deps: ST12, KB6 | phase: T-PROPOSE | req: REQ-TP2
+- [x] ST13: propose opens PR via pr.py | priority: 45 | status: done | by: owner | deps: ST12, KB6 | phase: T-PROPOSE | req: REQ-TP2
   details: after successful propose iteration, call open_pr from pr.py (or extend
   build_pr_body with propose mode) to open a PR with body sections: ## Metric
   evidence (verbatim stats from loop-metrics.json), ## Diagnosis (link/path),

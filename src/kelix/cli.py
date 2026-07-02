@@ -314,7 +314,7 @@ def cmd_diagnose(args) -> int:
 def cmd_propose(args) -> int:
     from .config import ConfigError
     from .loop import LoopError
-    from .propose import ProposeError, ProposeRunner
+    from .propose import ProposeError, ProposeRunner, metrics_excerpt
 
     root = Path(args.path).resolve()
     try:
@@ -333,6 +333,17 @@ def cmd_propose(args) -> int:
         print(say(f"sidecar written: {result.sidecar_path}", "ok"))
         if result.iteration and result.iteration.predicted_improvement:
             print(f"predicted improvement: {result.iteration.predicted_improvement}")
+        if not getattr(args, "no_pr", False):
+            from .pr import open_propose_pr
+
+            pr_url = open_propose_pr(
+                cfg,
+                result,
+                metrics_excerpt=metrics_excerpt(cfg),
+                diagnosis_file=result.diagnosis_file,
+            )
+            if pr_url:
+                print(say(f"PR opened: {pr_url}", "ok"))
         return 0
 
     for finding in result.findings:
@@ -459,6 +470,11 @@ def main(argv: list[str] | None = None) -> int:
         "--diagnosis-file",
         default="",
         help="optional diagnosis markdown to include as evidence",
+    )
+    p.add_argument(
+        "--no-pr",
+        action="store_true",
+        help="skip opening a GitHub PR after a successful proposal",
     )
     p.set_defaults(func=cmd_propose)
 
