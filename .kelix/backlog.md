@@ -376,7 +376,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   gracefully. tests/test_diagnose.py: 3 transcripts, budget 500 → truncation
   marker present.
 
-- [ ] ST10: diagnose agent iteration | priority: 48 | status: ready | by: owner | deps: ST9 | phase: T-DIAGNOSE | req: REQ-TD1, REQ-TD3
+- [x] ST10: diagnose agent iteration | priority: 48 | status: done | by: owner | deps: ST9 | phase: T-DIAGNOSE | req: REQ-TD1, REQ-TD3
   details: add DIAGNOSE_TEMPLATE in prompt.py; cmd_diagnose runs one adapter
   iteration (worktree isolation like plan) with ledger JSON excerpt + ST9
   transcripts; agent writes only the diagnosis markdown file; validate output
