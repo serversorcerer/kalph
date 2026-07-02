@@ -867,7 +867,7 @@ Owner decisions: `.kelix/phases/V-CUT/CONTEXT.md`. All tasks below are
   No fleet/pr/sync. Acceptance: directory exists; pytest -q passes inside sample;
   run-demo.sh is executable and documents promote step for human.
 
-- [ ] KV16: capture value-demo transcript | priority: 40 | status: ready | by: owner | deps: KV15 | phase: V-PROOF | req: REQ-VP2
+- [x] KV16: capture value-demo transcript | priority: 40 | status: done | by: owner | deps: KV15 | phase: V-PROOF | req: REQ-VP2
   details: execute samples/value-demo/run-demo.sh on a clean worktree; capture
   full transcript to docs/proof/value-demo.md including: goal text, interview
   Q&A (or QUESTIONS.md path), promote step, each iteration summary, verify
