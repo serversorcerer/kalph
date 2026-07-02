@@ -658,7 +658,7 @@ All tasks below are `status: proposed` until the owner promotes them.
 - [x] KE23: mcp audacity intro | priority: 70 | status: done | by: owner | deps: KE16 | phase: P-AUDIT | req: REQ-U2
   details: same pattern for docs/mcp.md; proof link to tests/test_mcp_server.py.
 
-- [ ] KE24: writing-for-the-loop tagline | priority: 69 | status: ready | by: owner | phase: P-AUDIT | req: REQ-U2
+- [x] KE24: writing-for-the-loop tagline | priority: 69 | status: done | by: owner | phase: P-AUDIT | req: REQ-U2
   details: update docs/writing-for-the-loop.md: adopt "Gold in, diamonds out"
   as the one-line principle in the opening; demote good/slop pairing to body
   examples only. Acceptance: first mention of gold/diamonds is the canon line.
