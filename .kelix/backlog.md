@@ -534,7 +534,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   Acceptance: first H1-adjacent paragraph names ≥3 non-Kiro agents; docs/kiro.md
   link present.
 
-- [ ] KE3: pyproject + package metadata | priority: 90 | status: ready | by: owner | phase: P-REPOS | req: REQ-R2
+- [x] KE3: pyproject + package metadata | priority: 90 | status: done | by: owner | phase: P-REPOS | req: REQ-R2
   details: update pyproject.toml `[project].description` and `keywords` to
   agent-agnostic voice (loop for any coding agent; Kiro as flagship integration
   in description, not sole identity). Keep version unchanged. Acceptance:
