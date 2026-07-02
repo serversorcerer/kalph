@@ -4,7 +4,7 @@
 - phase: T-PROPOSE
 - current_task: selecting
 - last_task: ST15
-- last_verified_commit: 6b0b773c40c74105c2ecc4885a29a3028704f890
+- last_verified_commit: b58fd29bf9d55348c455b45449d210b795eec85a
 - done: 43
 - total: 101
 - blockers:
