@@ -82,22 +82,31 @@ def serialize_backlog(tasks: list[Task]) -> str:
     return "\n".join(lines) + ("\n" if lines else "")
 
 
-def select_next(tasks: list[Task]) -> Task | None:
-    """Return the highest-priority ready task whose dependencies are done.
+def select_next(tasks: list[Task], autonomy: str = "normal") -> Task | None:
+    """Return the highest-priority selectable task whose dependencies are done.
 
     Owner-authored tasks outrank kalph-proposed tasks regardless of priority.
+    Ready tasks are always candidates. Proposed tasks are candidates only when
+    ``autonomy`` is ``"high"`` and rank below owner ready tasks.
     """
     done_ids = {task.id for task in tasks if task.status == "done"}
 
-    def ready(task: Task) -> bool:
-        return task.status == "ready" and all(dep in done_ids for dep in task.deps)
+    def candidate(task: Task) -> bool:
+        if not all(dep in done_ids for dep in task.deps):
+            return False
+        if task.status == "ready":
+            return True
+        if task.status == "proposed" and autonomy == "high":
+            return True
+        return False
 
-    candidates = [task for task in tasks if ready(task)]
+    candidates = [task for task in tasks if candidate(task)]
     if not candidates:
         return None
 
-    def sort_key(task: Task) -> tuple[int, int]:
+    def sort_key(task: Task) -> tuple[int, int, int]:
         owner_rank = 0 if task.by == "owner" else 1
-        return (owner_rank, -task.priority)
+        status_rank = 0 if task.status == "ready" else 1
+        return (owner_rank, status_rank, -task.priority)
 
     return min(candidates, key=sort_key)

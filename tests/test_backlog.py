@@ -78,6 +78,40 @@ def test_select_next_skips_non_ready():
     assert select_next(tasks) is None
 
 
+def test_select_next_normal_autonomy_skips_proposed():
+    tasks = [
+        Task("A", "done", 90, "done", "owner"),
+        Task("B", "proposed only", 99, "proposed", "kalph"),
+    ]
+    assert select_next(tasks, autonomy="normal") is None
+    assert select_next(tasks) is None
+
+
+def test_select_next_high_autonomy_selects_proposed():
+    tasks = [
+        Task("A", "done", 90, "done", "owner"),
+        Task("B", "proposed work", 60, "proposed", "kalph"),
+    ]
+    assert select_next(tasks, autonomy="high").id == "B"
+
+
+def test_select_next_high_autonomy_owner_ready_beats_proposed():
+    tasks = [
+        Task("A", "owner ready", 50, "ready", "owner"),
+        Task("B", "owner proposed", 99, "proposed", "owner"),
+        Task("C", "kalph proposed", 95, "proposed", "kalph"),
+    ]
+    assert select_next(tasks, autonomy="high").id == "A"
+
+
+def test_select_next_high_autonomy_owner_beats_kalph_proposed():
+    tasks = [
+        Task("A", "owner proposed", 40, "proposed", "owner"),
+        Task("B", "kalph proposed", 99, "proposed", "kalph"),
+    ]
+    assert select_next(tasks, autonomy="high").id == "A"
+
+
 def test_malformed_lines_are_skipped():
     text = """\
 # header

@@ -11,6 +11,9 @@ Durable facts about this repo for future iterations.
 - Backlog tasks are parsed by `src/kalph/backlog.py` (`parse_backlog`,
   `serialize_backlog`, `select_next`). Task lines use pipe-separated fields;
   owner tasks outrank kalph at equal selection time regardless of priority number.
+  `select_next(tasks, autonomy="normal")` skips `proposed` tasks; with
+  `autonomy="high"`, proposed tasks are candidates but sort below owner `ready`
+  tasks via `(owner_rank, status_rank, -priority)`.
 - Design invariants live in docs/research/ralph-invariants.md — static prompt,
   fresh context per iteration, deterministic stop, state in files. Never add a
   feature that violates them (e.g. no long-lived sessions, no RPC between

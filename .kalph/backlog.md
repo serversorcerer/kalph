@@ -14,7 +14,7 @@ tasks regardless of score. Only mark done after `pytest -q` and
 - [x] KB3: security module tests | priority: 75 | status: done | by: owner
 - [x] KB4: prioritization rubric doc | priority: 70 | status: done | by: owner
 
-- [ ] KB5: autonomy-aware task selection | priority: 88 | status: ready | by: owner | deps: KB1
+- [x] KB5: autonomy-aware task selection | priority: 88 | status: done | by: owner | deps: KB1
   rationale: proposed tasks must be selectable under autonomy high, and never outrank owner tasks otherwise
   details: extend src/kalph/backlog.py select_next(tasks, autonomy="normal") so that
   tasks with status "proposed" are treated as candidates only when autonomy="high"
