@@ -572,7 +572,7 @@ All tasks below are `status: proposed` until the owner promotes them.
   unchanged. Acceptance: load_config accepts each preset name; unknown name
   still raises ConfigError; tests/test_config.py covers all four.
 
-- [ ] KE8: cursor agent guide (Kelix-verified) | priority: 85 | status: ready | by: owner | deps: KE7 | phase: P-AGENT | req: REQ-A2
+- [x] KE8: cursor agent guide (Kelix-verified) | priority: 85 | status: done | by: owner | deps: KE7 | phase: P-AGENT | req: REQ-A2
   details: create docs/agents/cursor.md with headings aligned to docs/kiro.md
   loop sections (# The headless adapter, ## Configure kelix.toml, install, auth,
   worked example init→plan→run, quirks, troubleshooting). Command template matches
