@@ -198,6 +198,10 @@ def test_coverage_real_p_gate():
     result = coverage(roadmap, tasks, "P-GATE")
     by_req = {e.req_id: e.status for e in result if e.status != "warning"}
 
+    # Structural assertions only: the live backlog advances over time, so
+    # pinning exact statuses breaks as soon as the loop completes a task.
     assert set(by_req) == {"REQ-G1", "REQ-G2", "REQ-G3"}
-    assert by_req["REQ-G1"] == "covered"
-    assert all(by_req[req_id] == "in-progress" for req_id in ("REQ-G2", "REQ-G3"))
+    assert all(
+        status in ("covered", "in-progress", "uncovered")
+        for status in by_req.values()
+    )
