@@ -1064,7 +1064,7 @@ in docs/publishing.md). All tasks `status: ready`.
 
 ### Phase PYPUBLISH — Gate
 
-- [ ] PUB8: packaging smoke test | priority: 88 | status: ready | by: owner | deps: PUB2 | phase: PYPUBLISH | req: REQ-PB4
+- [x] PUB8: packaging smoke test | priority: 88 | status: done | by: owner | deps: PUB2 | phase: PYPUBLISH | req: REQ-PB4
   details: add tests/test_packaging.py: assert publish.yml exists, pyproject has
   license Apache-2.0 and project.scripts kelix entry, `python -m build` via
   subprocess in tmp cwd or import metadata from pyproject; at least 3 tests.
