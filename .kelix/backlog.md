@@ -1000,3 +1000,81 @@ Owner context: `.kelix/phases/DRIFT-FIX/CONTEXT.md`. Fleet config:
   118/118. Add DECISIONS.md D25 one paragraph: doc-drift fleet run id, files
   touched count, test_doc_drift green. Acceptance: all three commands exit 0;
   STATE.md done equals total.
+
+## Post-V — PyPI publish + power-user doc refresh
+
+Owner context: `.kelix/phases/PYPUBLISH/CONTEXT.md`. Owner PyPI account ready;
+trusted publisher + GitHub `pypi` environment + tag push remain manual (document
+in docs/publishing.md). All tasks `status: ready`.
+
+### Phase PYPUBLISH — Packaging
+
+- [ ] PUB1: pyproject.toml PyPI metadata | priority: 95 | status: ready | by: owner | phase: PYPUBLISH | req: REQ-PB1
+  details: modernize pyproject.toml per PyPA guide: `license = "Apache-2.0"`,
+  `license-files = ["LICENSE"]`, remove deprecated license table/classifier;
+  add project.urls Repository and Issues; description matches GitHub (no em-dash);
+  sync `version` with src/kelix/__init__.py __version__. Acceptance:
+  `python -m build && twine check dist/*` exit 0; no setuptools license warnings.
+
+- [ ] PUB2: publish.yml and CI package job | priority: 94 | status: ready | by: owner | deps: PUB1 | phase: PYPUBLISH | req: REQ-PB1
+  details: add `.github/workflows/publish.yml`: trigger on push tags `v*`,
+  permissions id-token write, environment pypi, steps build/twine check/
+  pypa/gh-action-pypi-publish@release/v1; smoke `pip install dist/*.whl && kelix --help`.
+  Add `package` job to ci.yml: build wheel, twine check, kelix --help. Acceptance:
+  YAML valid; publish workflow file comments document trusted publishing setup.
+
+- [ ] PUB3: docs/publishing.md maintainer runbook | priority: 93 | status: ready | by: owner | deps: PUB2 | phase: PYPUBLISH | req: REQ-PB2
+  details: create docs/publishing.md: PyPI trusted publisher fields (owner, repo,
+  workflow publish.yml, environment pypi), GitHub environment creation, optional
+  TestPyPI upload commands, release steps (bump version, tag vX.Y.Z, push tag,
+  verify pypi.org/project/kelix, pipx install kelix). List owner-only steps Kelix
+  cannot automate. Link from README maintainer note. Acceptance: file exists;
+  no secrets in doc; link from README.
+
+### Phase PYPUBLISH — Power-user docs
+
+- [ ] PUB4: README developer tone refresh | priority: 92 | status: ready | by: owner | deps: PUB1 | phase: PYPUBLISH | req: REQ-PB3
+  details: rewrite README for vibe-coders/power users per PYPUBLISH CONTEXT:
+  remove patronizing "Who this is for" / "plain English" / "you do not need
+  jargon" framing; keep value sentence first screen, Ralph/verified-done/worktree
+  terms with brief inline context; install `pipx install kelix` primary + github
+  fallback until first release; receipts labeled mock vs live; Kiro/fleet optional
+  sections; maintain test_value_demo first-30-lines assertions (well-specified goal,
+  walk away, verified commits, value-demo.md). No banned PR/sync phrases. Acceptance:
+  pytest tests/test_value_demo.py::test_readme_first_screen* tests/test_doc_drift
+  README tests pass.
+
+- [ ] PUB5: docs/index.md and quickstart.md refresh | priority: 91 | status: ready | by: owner | deps: PUB4 | phase: PYPUBLISH | req: REQ-PB3
+  details: align docs/index.md and docs/quickstart.md with README tone and factual
+  install (`pipx install kelix`, github fallback, link docs/publishing.md for
+  maintainers). Developer audience; keep 6-step quickstart structure. Acceptance:
+  test_value_demo quickstart happy-path banned phrase tests pass; index links
+  publishing.md.
+
+- [ ] PUB6: CONTRIBUTING and agent guide install sections | priority: 90 | status: ready | by: owner | deps: PUB5 | phase: PYPUBLISH | req: REQ-PB3
+  details: update CONTRIBUTING.md opening and dev setup for PyPI/git install paths;
+  update install one-liner in docs/agents/cursor.md, claude.md, codex.md, gemini.md
+  to `pipx install kelix` with github fallback; keep agent-specific flags. Acceptance:
+  `rg 'pip install kelix' docs/agents` shows pipx not bare pip as primary.
+
+- [ ] PUB7: site metadata sync | priority: 89 | status: ready | by: owner | deps: PUB4 | phase: PYPUBLISH | req: REQ-PB3
+  details: docs/_config.yml description matches pyproject description (no em-dash).
+  Acceptance: description identical to pyproject.toml project.description.
+
+### Phase PYPUBLISH — Gate
+
+- [ ] PUB8: packaging smoke test | priority: 88 | status: ready | by: owner | deps: PUB2 | phase: PYPUBLISH | req: REQ-PB4
+  details: add tests/test_packaging.py: assert publish.yml exists, pyproject has
+  license Apache-2.0 and project.scripts kelix entry, `python -m build` via
+  subprocess in tmp cwd or import metadata from pyproject; at least 3 tests.
+  Acceptance: pytest tests/test_packaging.py -q pass.
+
+- [ ] PUB9: DECISIONS D26 PyPI packaging | priority: 87 | status: ready | by: owner | deps: PUB3,PUB8 | phase: PYPUBLISH | req: REQ-PB2
+  details: add DECISIONS.md D26: PyPI packaging adopted (PyPA tutorial), publish
+  workflow on tag, trusted publishing preferred, owner tag push for v0.1.0;
+  cite docs/publishing.md. Acceptance: D26 paragraph present.
+
+- [ ] PUB10: PYPUBLISH closure gate | priority: 86 | status: ready | by: owner | deps: PUB4,PUB5,PUB6,PUB7,PUB8,PUB9 | phase: PYPUBLISH | req: REQ-PB4
+  details: run pytest -q, ruff check src tests, kelix lint, python -m build,
+  twine check dist/*. Mark PUB* done; STATE.md phase PYPUBLISH, done/total updated.
+  Acceptance: all exit 0.
