@@ -4,7 +4,7 @@
 - phase: PYPUBLISH
 - current_task: selecting
 - last_task: PUB2
-- last_verified_commit: acab5b0
+- last_verified_commit: 098205d
 - done: 120
 - total: 128
 - blockers:
