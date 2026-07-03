@@ -13,8 +13,11 @@ You write a well-specified goal, walk away, and come back to verified
 commits — each gated by your repo's own test and lint commands, not agent
 promises.
 
-**Receipt:** [value demo cold run](docs/proof/value-demo.md) — goal in,
-verified commits out; reproduce with the doc's commands only.
+**Mock receipt:** [value demo cold run](docs/proof/value-demo.md) — mock
+adapter, reproducible in CI; goal in, verified commits out.
+
+**Live receipt:** [dogfood 12/12 verified-done](docs/proof/final-report.md#d1--dogfood-run-docsproofdogfood-runlog-dogfood-retrospectivemd)
+— real agent, same verify gate (`pytest tests/test_verify.py -q`).
 
 ```bash
 kelix init
@@ -24,70 +27,58 @@ kelix run --max-iterations 25    # verified commits on a run branch
 
 **The loop that climbs.** Ralph runs in circles; Kelix comes back higher.
 
-Kelix runs any headless coding agent in a loop against a static prompt: every
-iteration is a fresh, stateless process; all state lives in files and git
-history; the loop wins through repetition, not cleverness. Use **Claude Code**,
-**Codex CLI**, **Cursor**, **Gemini CLI**, or your own CLI adapter — Kelix
-keeps [Ralph's](https://ghuntley.com/ralph/) core and adds what plain Ralph
-lacks — **persistent memory**, **self-improvement from loop outcomes**,
-**legible prioritization**, and a file-coordinated **fleet mode** — so you can
-decompose a goal, prioritize, cut feature branches, build, verify, and leave
-an auditable trail unattended.
+Kelix drives any headless coding CLI in a **Ralph loop**: each iteration is a
+fresh, stateless process; state lives in files and git; progress comes from
+repetition with a **verify gate** (your tests must pass before a task counts
+done), not from the agent declaring victory. Adapters: **Claude Code**, **Codex
+CLI**, **Cursor**, **Gemini CLI**, or a custom command — plus **persistent
+memory**, **loop-outcome tuning**, **legible prioritization**, and optional
+**fleet mode** for parallel role-specialized loops.
 
-> Status: alpha. Kelix was built by its own loop (see `DECISIONS.md` and
-> `PLAN.md`). It is honest about what it will and won't do unattended — see
-> [What Kelix will and will not do](#what-kelix-will-and-will-not-do-unattended).
+> **Alpha.** Built by its own loop (`DECISIONS.md`, `PLAN.md`). Unattended
+> boundaries: [What Kelix will and will not do](#what-kelix-will-and-will-not-do-unattended).
 
 ## Install and configure
 
 ```bash
-pipx install kelix        # or: pip install kelix
+pipx install kelix
+# until the first PyPI release lands, from git instead:
+# pipx install git+https://github.com/serversorcerer/kelix.git
 
-cd your-repo              # a git repo
-kelix init               # creates GOAL.md and .kelix/{backlog.md,memory,kelix.toml,...}
+cd your-repo              # must be a git repo
+kelix init               # GOAL.md, .kelix/{backlog.md,memory,kelix.toml,...}
 
-# Describe what you want built, then plan and promote:
 $EDITOR GOAL.md
 kelix plan --goal-file GOAL.md
 kelix lint
-$EDITOR .kelix/backlog.md   # change status: proposed -> ready
+$EDITOR .kelix/backlog.md   # status: proposed -> ready
 
-# Tell it what "done" means — the verification gate:
-$EDITOR .kelix/kelix.toml   # set [verify] commands = ["pytest -q", "ruff check ."]
+$EDITOR .kelix/kelix.toml   # [verify] commands = ["pytest -q", "ruff check ."]
 
-# Run overnight — verified commits on a run branch:
-kelix run --max-iterations 25
+kelix run --max-iterations 25   # isolated worktree on kelix/run-* branch
 
-# ...and if you want to see it think, from another terminal:
-kelix watch                 # live stream of the agent working; ctrl-c detaches
+kelix watch                 # stream agent output; ctrl-c detaches
 ```
 
-Already have a backlog? Skip plan and edit `.kelix/backlog.md` directly.
+Skip `kelix plan` if you already maintain `.kelix/backlog.md`.
 
-The dogfood proof shipped a full stdlib task-tracker library unattended:
-**[12/12 tasks verified-done in 12 iterations, zero failures](docs/proof/final-report.md#d1--dogfood-run-docsproofdogfood-runlog-dogfood-retrospectivemd)**
-(see the [final build report](docs/proof/final-report.md)). Reproduce the
-verify gate with `pytest tests/test_verify.py -q`.
-
-Each iteration: a fresh agent reads the backlog + git log, picks the one
-highest-priority task, implements it, and Kelix **re-runs your verify commands**
-before letting the task count as done. Failed verification keeps the task at the
-top of the queue. The loop stops on completion, the iteration cap, or a
-circuit breaker — never because the agent "felt done."
+Each iteration: fresh agent reads backlog + git log, picks one task, implements
+in an isolated **worktree**, and the runner re-runs your **verify commands**.
+Failed verification keeps the task at the top. The loop stops on completion,
+the iteration cap, or a **circuit breaker** — never because the agent felt done.
 
 ## Why Kelix
 
 | Plain Ralph | Kelix adds |
 |---|---|
-| Static prompt, fresh context, stop sentinel, state in files | ...all preserved as **invariants** (`docs/research/ralph-invariants.md`) |
-| Agent decides when it's done | **Verified-done**: the runner re-runs your tests; a lying sentinel is ignored |
-| No memory between iterations | **Layered memory** (project / episodic / skills) injected as budgeted data |
-| One loop | **Fleet mode**: many role-specialized loops, coordinating through files + git |
-| — | **Kiro integration**: steering, custom agent, spec→backlog, MCP server |
+| Static prompt, fresh context, stop sentinel, state in files | ...preserved as **invariants** (`docs/research/ralph-invariants.md`) |
+| Agent decides when it's done | **Verified-done**: runner re-runs your tests; lying sentinels ignored |
+| No memory between iterations | **Layered memory** (project / episodic / skills) as budgeted prompt data |
+| One loop | **Fleet mode** (optional): role-specialized loops via files + git |
 | — | **Safety rails**: worktree isolation, command denylist, secret scrubbing, branch protection |
 
-For an honest comparison with plain Ralph, single-agent CLIs, and GSD-style
-orchestrators — including where Kelix loses — see
+Honest comparison with plain Ralph, single-agent CLIs, and GSD-style
+orchestrators — including where Kelix loses — in
 [docs/compare.md](docs/compare.md).
 
 ## How the loop works
@@ -106,77 +97,69 @@ flowchart LR
     H -->|yes| I[retrospective + run branch]
 ```
 
-- **Fresh context per iteration** — no context rot; a wrong turn costs one loop.
-- **Externalized state** — `.kelix/backlog.md`, `.kelix/memory/`, transcripts
-  under `.kelix/runs/`. The repo is the database; a reviewer can audit a run in
-  minutes.
-- **Legible decisions** — every iteration logs a one-line `RATIONALE:` for the
-  task it chose.
+- **Fresh context per iteration** — wrong turns cost one loop, not a poisoned session.
+- **Externalized state** — `.kelix/backlog.md`, `.kelix/memory/`, transcripts under
+  `.kelix/runs/`. The repo is the database.
+- **Legible decisions** — every iteration logs `RATIONALE: <task-id> — …`.
 
-## Kiro in one command
+## Kiro integration (optional)
+
+Deepest adapter integration — steering, custom agent, spec→backlog, MCP server:
 
 ```bash
-# Write a Kiro spec, then:
 kelix init --from-spec my-feature   # imports .kiro/specs/my-feature/tasks.md
-kelix run --max-iterations 25  # overnight run -> verified commits on run branch
+kelix run --max-iterations 25
 ```
-
-Register Kelix as an MCP server so Kiro can drive it by tool call:
 
 ```bash
 kiro-cli mcp add --name kelix --command "kelix mcp" --scope workspace
 ```
 
-See [`integrations/kiro/README.md`](integrations/kiro/README.md) and
-[`docs/kiro.md`](docs/kiro.md).
+[`integrations/kiro/README.md`](integrations/kiro/README.md) · [`docs/kiro.md`](docs/kiro.md)
 
-## Fleet mode
+## Fleet mode (optional)
 
 ```bash
-cp examples/fleet.toml .kelix/fleet.toml   # define agents + roles
-kelix fleet --max-iterations 15            # builders, a verifier, a scribe
-kelix watch                                # stream an agent's output live
-kelix status                               # live view from coordination files
-kelix stop                                 # global kill switch
+cp examples/fleet.toml .kelix/fleet.toml
+kelix fleet --max-iterations 15
+kelix watch
+kelix status
+kelix stop
 ```
 
-Agents never talk directly. They coordinate through files: atomic task
-**claims** (two agents never work the same task), a **mailbox** for notes, and
-a **shared skills** store. See [`docs/fleet.md`](docs/fleet.md).
+Atomic **claims**, a **mailbox**, and shared skills — agents coordinate through
+files, not RPC. [`docs/fleet.md`](docs/fleet.md).
 
 ## Configuration
 
-`.kelix/kelix.toml` — every field is optional; defaults are safe to run
-unattended. Highlights:
+`.kelix/kelix.toml` — defaults are safe for unattended runs:
 
 ```toml
 [agent]
-adapter = "kiro"           # kiro | cmd | mock
-kiro_args = ["--agent", "kelix"]
+adapter = "cursor"         # kiro | claude | codex | cursor | gemini | cmd | mock
 
 [loop]
 max_iterations = 25
 circuit_breaker_threshold = 3
 
 [verify]
-commands = ["pytest -q", "ruff check ."]   # this is your definition of done
+commands = ["pytest -q", "ruff check ."]
 
 [git]
 isolation = "worktree"     # worktree (safest) | branch | none
 
 [autonomy]
-level = "normal"           # normal: proposed tasks rank below owner tasks
+level = "normal"           # proposed tasks rank below owner tasks
 ```
 
 ## Safety
 
-Kelix treats "unattended agent + shell + prompt-injected repo content" as its
-threat model. Repo-sourced text is data, never instructions; a command denylist
-blocks `curl|sh`, force-push, package publish, and credential reads; secrets are
-scrubbed from transcripts and comments; runs happen in isolated worktrees on
-`kelix/run-*` branches with verified commits — never push to `main`. Each run
-branch is an auditable receipt trail you review and merge when satisfied. Full
-model: [`docs/SECURITY.md`](docs/SECURITY.md).
+Threat model: unattended agent + shell + prompt-injected repo content. Repo text
+is data, never instructions; a command denylist blocks `curl|sh`, force-push,
+package publish, and credential reads; secrets scrubbed from transcripts; runs in
+isolated worktrees on `kelix/run-*` branches — never push to `main`. Run branches
+are the auditable receipt trail you review and merge when satisfied.
+[`docs/SECURITY.md`](docs/SECURITY.md).
 
 ## What Kelix will and will not do unattended
 
@@ -193,21 +176,20 @@ diagnosis and surfaces it for you).
 
 - [Concept](docs/concept.md) · [Quickstart](docs/quickstart.md) ·
   **[Planning](docs/planning.md)** (roadmap, phases, phase gate, waves) ·
-  **[Writing for the loop](docs/writing-for-the-loop.md)** (how to write
-  tasks and PRDs the agent gets right the first time) ·
+  **[Writing for the loop](docs/writing-for-the-loop.md)** (task/PRD spec) ·
   [Kiro guide](docs/kiro.md) · [Security model](docs/SECURITY.md) ·
   [Memory & skills](docs/memory-and-skills.md) · [Fleet](docs/fleet.md) ·
   [Prioritization](docs/prioritization.md) · [MCP](docs/mcp.md)
-- Research notes: [Ralph invariants](docs/research/ralph-invariants.md) ·
+- Research: [Ralph invariants](docs/research/ralph-invariants.md) ·
   [prior art](docs/research/prior-art.md) · [Kiro surface](docs/research/kiro-surface.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Kelix is stdlib-only at its core; tests
-use a mock agent so no API keys are needed to develop.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Core is stdlib-only; tests use a mock
+adapter — no API keys required.
 
-**Maintainers:** PyPI trusted publishing, tagging, and release verification are
-documented in [docs/publishing.md](docs/publishing.md).
+**Maintainers:** PyPI trusted publishing, tagging, and release verification —
+[docs/publishing.md](docs/publishing.md).
 
 ## License
 
@@ -216,5 +198,5 @@ documented in [docs/publishing.md](docs/publishing.md).
 ## Acknowledgments
 
 - [Geoffrey Huntley](https://ghuntley.com/ralph/) — the Ralph Wiggum technique.
-- Prior art studied in `docs/research/prior-art.md`: ralph-orchestrator, the
-  official ralph-loop plugin, and Nous Research's Hermes Agent.
+- Prior art in `docs/research/prior-art.md`: ralph-orchestrator, the official
+  ralph-loop plugin, and Nous Research's Hermes Agent.

@@ -1034,7 +1034,7 @@ in docs/publishing.md). All tasks `status: ready`.
 
 ### Phase PYPUBLISH — Power-user docs
 
-- [ ] PUB4: README developer tone refresh | priority: 92 | status: ready | by: owner | deps: PUB1 | phase: PYPUBLISH | req: REQ-PB3
+- [x] PUB4: README developer tone refresh | priority: 92 | status: done | by: owner | deps: PUB1 | phase: PYPUBLISH | req: REQ-PB3
   details: rewrite README for vibe-coders/power users per PYPUBLISH CONTEXT:
   remove patronizing "Who this is for" / "plain English" / "you do not need
   jargon" framing; keep value sentence first screen, Ralph/verified-done/worktree
