@@ -4,6 +4,10 @@
 headless coding agent at it, walk away, and come back to verified commits —
 each gated by your repo's own test and lint commands, not agent promises.
 
+**Mock receipt:** [value demo cold run](proof/value-demo.md) — mock adapter,
+reproducible in CI. **Live receipt:** [dogfood 12/12 verified-done](proof/final-report.md#d1--dogfood-run-docsproofdogfood-runlog-dogfood-retrospectivemd)
+— real agent, same verify gate.
+
 ## Start here
 
 Pick the link that matches what you need right now (five links, no side quests):
@@ -27,6 +31,9 @@ memory, legible prioritization, and optional fleet mode when one agent is not en
 
 ```bash
 pipx install kelix
+# until the first PyPI release lands:
+# pipx install git+https://github.com/serversorcerer/kelix.git
+
 cd your-repo && kelix init
 kelix plan --goal-file GOAL.md   # optional: structured plan-first path
 kelix run --max-iterations 25
@@ -83,6 +90,9 @@ The design homework behind Kelix:
 Kelix is open source under Apache-2.0 and was built by its own loop. Source,
 issues, and contributing guide live in the repository — see the
 [README](https://github.com/serversorcerer/kelix) for the project overview.
+
+**Maintainers:** PyPI trusted publishing, tagging, and release verification —
+[publishing.md](publishing.md).
 
 ---
 

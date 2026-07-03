@@ -1,12 +1,17 @@
 # Quickstart
 
 **6 steps to first verified commit** — from an empty repo to verified commits on a
-run branch using only init, plan, and run.
+`kelix/run-*` branch using only init, plan, and run.
 
-Install Kelix once (`pipx install kelix` or `pip install kelix`), then follow the
-numbered path below. Kelix's core is stdlib-only Python; `kelix init` asks which
-headless agent adapter to wire in (Kiro, Claude Code, Codex, Cursor, Gemini, a
-custom CLI, or `mock` for tests).
+Install Kelix once, then follow the numbered path. Core loop is stdlib-only Python;
+`kelix init` wires a headless agent adapter (Kiro, Claude Code, Codex, Cursor,
+Gemini, custom CLI, or `mock` for tests).
+
+```bash
+pipx install kelix
+# until the first PyPI release lands:
+# pipx install git+https://github.com/serversorcerer/kelix.git
+```
 
 ## 1. Initialize
 
@@ -73,12 +78,11 @@ Example:
 kelix run --max-iterations 25
 ```
 
-Each iteration: a fresh agent reads the backlog and git log, picks the highest-
-priority ready task, implements it in an isolated git worktree on a
-`kelix/run-<id>` branch, and the runner re-runs your verify commands. Green:
-commit, record memory, next task. Red: the task stays on top. The run stops on
-the completion sentinel, the iteration cap, the circuit breaker (3 consecutive
-failures by default), or the kill switch.
+Each iteration: a fresh agent reads backlog + git log, picks the highest-priority
+ready task, implements it in an isolated **worktree** on `kelix/run-<id>`, and the
+runner re-runs your **verify commands**. Green: commit, record memory, next task.
+Red: task stays on top. The run stops on the completion sentinel, the iteration
+cap, the circuit breaker (3 consecutive failures by default), or the kill switch.
 
 Useful flags for this step:
 

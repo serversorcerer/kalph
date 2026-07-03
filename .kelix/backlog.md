@@ -1045,7 +1045,7 @@ in docs/publishing.md). All tasks `status: ready`.
   pytest tests/test_value_demo.py::test_readme_first_screen* tests/test_doc_drift
   README tests pass.
 
-- [ ] PUB5: docs/index.md and quickstart.md refresh | priority: 91 | status: ready | by: owner | deps: PUB4 | phase: PYPUBLISH | req: REQ-PB3
+- [x] PUB5: docs/index.md and quickstart.md refresh | priority: 91 | status: done | by: owner | deps: PUB4 | phase: PYPUBLISH | req: REQ-PB3
   details: align docs/index.md and docs/quickstart.md with README tone and factual
   install (`pipx install kelix`, github fallback, link docs/publishing.md for
   maintainers). Developer audience; keep 6-step quickstart structure. Acceptance:
