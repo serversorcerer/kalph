@@ -3,8 +3,8 @@
 - milestone: post-V
 - phase: PYPUBLISH
 - current_task: selecting
-- last_task: PUB5
-- last_verified_commit: 34a8245
-- done: 123
+- last_task: PUB6
+- last_verified_commit: f5c50eb
+- done: 124
 - total: 128
 - blockers:
