@@ -1021,7 +1021,8 @@ in docs/publishing.md). All tasks `status: ready`.
   permissions id-token write, environment pypi, steps build/twine check/
   pypa/gh-action-pypi-publish@release/v1; smoke `pip install dist/*.whl && kelix --help`.
   Add `package` job to ci.yml: build wheel, twine check, kelix --help. Acceptance:
-  YAML valid; publish workflow file comments document trusted publishing setup.
+  `python -m build && twine check dist/*` exit 0; CI package job runs `kelix --help`
+  exit 0; publish.yml comments document trusted publishing setup.
 
 - [ ] PUB3: docs/publishing.md maintainer runbook | priority: 93 | status: ready | by: owner | deps: PUB2 | phase: PYPUBLISH | req: REQ-PB2
   details: create docs/publishing.md: PyPI trusted publisher fields (owner, repo,
