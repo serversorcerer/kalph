@@ -1075,7 +1075,7 @@ in docs/publishing.md). All tasks `status: ready`.
   workflow on tag, trusted publishing preferred, owner tag push for v0.1.0;
   cite docs/publishing.md. Acceptance: D26 paragraph present.
 
-- [ ] PUB10: PYPUBLISH closure gate | priority: 86 | status: ready | by: owner | deps: PUB4,PUB5,PUB6,PUB7,PUB8,PUB9 | phase: PYPUBLISH | req: REQ-PB4
+- [x] PUB10: PYPUBLISH closure gate | priority: 86 | status: done | by: owner | deps: PUB4,PUB5,PUB6,PUB7,PUB8,PUB9 | phase: PYPUBLISH | req: REQ-PB4
   details: run pytest -q, ruff check src tests, kelix lint, python -m build,
   twine check dist/*. Mark PUB* done; STATE.md phase PYPUBLISH, done/total updated.
   Acceptance: all exit 0.
